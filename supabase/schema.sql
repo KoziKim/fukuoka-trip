@@ -180,7 +180,8 @@ alter publication supabase_realtime add table public.members;
 -- ─────────── 코멘트 → 푸시 알림 ───────────
 -- notify Edge Function을 배포한 뒤, 아래 두 값을 본인 프로젝트 것으로 바꾸고 실행하세요.
 --   :project_ref  = 프로젝트 참조 id (대시보드 URL에 있는 값)
---   :service_key  = service_role 키
+--   :service_key  = Secret key (sb_secret_...) — 예전 이름은 service_role 키.
+--                   이 값은 RLS를 우회하므로 브라우저 쪽에는 절대 넣지 않는다.
 --
 -- create extension if not exists pg_net;
 --

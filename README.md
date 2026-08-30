@@ -39,16 +39,22 @@ npm run preview  # 빌드 미리보기
 **3. 익명 로그인 켜기** — Authentication → Sign In / Providers → **Anonymous sign-ins** 활성화.
 (이름 + 초대코드 방식이라 사용자에게는 보이지 않지만, 내부적으로 기기별 신원을 만들어 RLS로 본인 여행만 접근하게 합니다.)
 
-**4. 키 등록** — Project Settings → API에서 값을 복사해, GitHub 저장소
+**4. 키 등록** — Project Settings → **API Keys**에서 값을 복사해, GitHub 저장소
 Settings → Secrets and variables → **Actions → Variables**에 다음을 추가합니다.
 
 | 이름 | 값 |
 |---|---|
-| `VITE_SUPABASE_URL` | Project URL |
-| `VITE_SUPABASE_ANON_KEY` | anon public key |
+| `VITE_SUPABASE_URL` | `https://<프로젝트 ref>.supabase.co` (대시보드 주소의 ref) |
+| `VITE_SUPABASE_ANON_KEY` | **Publishable key** (`sb_publishable_...`) |
 | `VITE_VAPID_PUBLIC_KEY` | 푸시용 공개키 (아래 5단계) |
 
-anon key는 브라우저에 노출되는 것이 정상입니다. 실제 보호는 RLS 정책이 합니다.
+> Supabase가 키 이름을 바꿨습니다. **Publishable key**가 예전 `anon` key,
+> **Secret key**가 예전 `service_role` key입니다. 옛 이름은 Legacy API Keys 탭에 남아 있고
+> 둘 다 동작하지만, 새 프로젝트라면 Publishable key를 쓰세요.
+
+Publishable key는 브라우저에 노출되는 것이 정상입니다. 실제 보호는 RLS 정책이 합니다.
+**Secret key는 절대 이 앱이나 저장소 변수에 넣지 마세요** — RLS를 통째로 우회합니다.
+5단계의 서버 함수에서만 씁니다.
 
 **5. 푸시 알림** — `npx web-push generate-vapid-keys`로 키 쌍을 만든 뒤:
 
