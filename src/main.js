@@ -770,6 +770,12 @@ $('jn-go').addEventListener('click', async () => {
 /* ───────── 꿀팁 탭 ───────── */
 /* 항목은 "문자열" 또는 { t, pri } 형태 — pri 1=필수, 2=중요, 없으면 일반 */
 const normEntry = x => (typeof x === 'string' ? { t: x, pri: 0 } : { t: x.t, pri: x.pri || 0 })
+/* 체크/삭제 상태의 키는 내용에서 뽑는다. 목록 순서가 바뀌어도 엉뚱한 항목에 붙지 않는다 */
+function textKey(prefix, text) {
+  let h = 0
+  for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) | 0
+  return prefix + Math.abs(h).toString(36)
+}
 const priBadge = p => p === 1 ? `<span class="pri p1">필수</span>` : p === 2 ? `<span class="pri p2">중요</span>` : ''
 const byPri = (a, b) => (a.pri || 9) - (b.pri || 9)
 
@@ -792,8 +798,10 @@ function renderTips() {
   renderPriFilter('tipFilter', onlyImportantTips, '필수·중요만')
   let html = ''
   TIPS.forEach((cat, ci) => {
-    const items = cat.items.map((raw, ti) => ({ ...normEntry(raw), key: `p${ci}-${ti}`, custom: false }))
-      .filter(x => !S.removedTips.includes(x.key))
+    const items = cat.items.map(raw => {
+      const e = normEntry(raw)
+      return { ...e, key: textKey('t', cat.c + e.t), custom: false }
+    }).filter(x => !S.removedTips.includes(x.key))
     const customs = S.customTips.filter(x => x.cat === cat.c).map(x => ({ t: x.text, pri: 0, key: x.id, custom: true }))
     let all = [...items, ...customs].sort(byPri)
     if (onlyImportantTips) all = all.filter(x => x.pri === 1 || x.pri === 2)
@@ -827,8 +835,10 @@ $('tipForm').addEventListener('submit', e => {
 function renderChecks() {
   renderPriFilter('checkFilter', onlyImportantChecks, '필수·중요만')
   let rows = [
-    ...PRESET_CHECKS.map((raw, i) => ({ ...normEntry(raw), key: 'c' + i, custom: false }))
-      .filter(x => !S.removedChecks.includes(x.key)),
+    ...PRESET_CHECKS.map(raw => {
+      const e = normEntry(raw)
+      return { ...e, key: textKey('k', e.t), custom: false }
+    }).filter(x => !S.removedChecks.includes(x.key)),
     ...S.customChecks.map(x => ({ t: x.text, pri: 0, key: x.id, custom: true })),
   ].sort(byPri)
   if (onlyImportantChecks) rows = rows.filter(x => x.pri === 1 || x.pri === 2)
