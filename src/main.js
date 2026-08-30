@@ -1,6 +1,11 @@
 import './styles.css'
 import { CATS, AIRPORT, ICN, PRESET_FOODS, PRESET_SPOTS, HOTEL_PRESETS, TIPS, TIP_SOURCES, PRESET_CHECKS } from './data.js'
 import { hav, routes, routeChips, bestSummary } from './transit.js'
+import {
+  cloud, initCloud, resumeTrip, createTrip, joinTrip, clearSession, fetchAll, pushState,
+  addItem, updateItem, removeItem, addComment, removeComment,
+  pushSupported, pushStatus, enablePush, disablePush,
+} from './cloud.js'
 
 /* ───────── 저장소 ───────── */
 const KEY = 'fukuoka-note-v1'
@@ -13,7 +18,18 @@ const defaultState = () => ({
 })
 let S = defaultState()
 try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(defaultState(), JSON.parse(raw)) } catch (e) { /* 프라이빗 모드 등 */ }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(S)) } catch (e) { /* ignore */ } }
+/* 공유 상태로 올릴 항목 — 일정(plan_items)과 코멘트는 별도 테이블이라 여기 넣지 않는다 */
+const SHARED_KEYS = ['hotel', 'customFoods', 'foodMeta', 'hiddenFoods', 'customTips', 'removedTips',
+  'checks', 'customChecks', 'removedChecks', 'expenses', 'rate', 'tripStart', 'dayCount']
+function sharedState() {
+  const o = {}
+  for (const k of SHARED_KEYS) o[k] = k === 'dayCount' ? S.days.length : S[k]
+  return o
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(S)) } catch (e) { /* ignore */ }
+  if (cloud.active) pushState(sharedState())
+}
 const uid = () => 'x' + Math.random().toString(36).slice(2, 9)
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 const gmap = name => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + ' 福岡')}`
@@ -280,7 +296,9 @@ function renderDays() {
             <button data-mv="1" data-id="${it.id}">↓</button>
             <button data-rm="${it.id}">삭제</button>
             ${name ? `<a href="${gmap(name.replace(/^🏨 /, ''))}" target="_blank" rel="noopener">지도↗</a>` : ''}
+            ${cloud.active ? `<button class="cmbtn ${openComments.has(it.id) ? 'on' : ''}" data-cm="${it.id}">💬 ${(cloudComments[it.id] || []).length || ''}</button>` : ''}
           </div>
+          ${cloud.active && openComments.has(it.id) ? commentPanel(it.id) : ''}
         </div></div>
       </div>`
       const next = items[idx + 1]
@@ -306,22 +324,65 @@ $('addDayBtn').addEventListener('click', () => {
   S.days.push({ id: uid(), items: [] }); curDay = S.days.length - 1; save(); renderDays()
 })
 $('tripStart').addEventListener('change', e => { S.tripStart = e.target.value; save(); renderDays() })
-$('dayView').addEventListener('click', e => {
+$('dayView').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return
   if (b.id === 'addItemBtn') { openPicker(); return }
   if (b.id === 'delDayBtn') {
     if (!confirm('이 일차와 일정을 삭제할까요?')) return
-    S.days.splice(curDay, 1); curDay = Math.max(0, curDay - 1); save(); renderDays(); return
+    const removed = curDay
+    if (cloud.active) {
+      await Promise.all(S.days[removed].items.map(i => removeItem(i.id)))
+      // 뒤 일차를 한 칸씩 당긴다
+      for (let k = removed + 1; k < S.days.length; k++)
+        await Promise.all(S.days[k].items.map(i => updateItem(i.id, { day: k - 1 })))
+    }
+    S.days.splice(removed, 1); curDay = Math.max(0, removed - 1); save(); renderDays(); return
   }
   const day = S.days[curDay]
-  if (b.dataset.rm) { day.items = day.items.filter(x => x.id !== b.dataset.rm); save(); renderDays(); return }
+  if (b.dataset.rm) {
+    const id = b.dataset.rm
+    day.items = day.items.filter(x => x.id !== id)
+    openComments.delete(id)
+    save(); renderDays()
+    if (cloud.active) removeItem(id).catch(() => refreshCloud())
+    return
+  }
   if (b.dataset.mv) {
     const i = day.items.findIndex(x => x.id === b.dataset.id), j = i + (+b.dataset.mv)
     if (i < 0 || j < 0 || j >= day.items.length) return
-    const t = day.items[i].time; day.items[i].time = day.items[j].time; day.items[j].time = t
-    ;[day.items[i], day.items[j]] = [day.items[j], day.items[i]]
+    const a = day.items[i], c = day.items[j]
+    const t = a.time; a.time = c.time; c.time = t
+    ;[day.items[i], day.items[j]] = [c, a]
     save(); renderDays()
+    if (cloud.active) {
+      Promise.all([updateItem(a.id, { at: a.time || null }), updateItem(c.id, { at: c.time || null })])
+        .catch(() => refreshCloud())
+    }
+    return
   }
+  if (b.dataset.cm) {
+    const id = b.dataset.cm
+    openComments.has(id) ? openComments.delete(id) : openComments.add(id)
+    renderDays()
+  }
+})
+
+/* 코멘트 등록 / 삭제 */
+$('dayView').addEventListener('submit', async e => {
+  const f = e.target.closest('form[data-cmadd]'); if (!f) return
+  e.preventDefault()
+  const input = f.elements.body
+  const body = input.value.trim()
+  if (!body) return
+  input.value = ''
+  try { await addComment(f.dataset.cmadd, body); await refreshCloud() }
+  catch (err) { alert(err.message || String(err)); input.value = body }
+})
+$('dayView').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-cmdel]'); if (!b) return
+  if (!confirm('코멘트를 삭제할까요?')) return
+  try { await removeComment(b.dataset.cmdel); await refreshCloud() }
+  catch (err) { alert(err.message || String(err)) }
 })
 const pickDialog = $('pickDialog')
 function refreshPickOptions() {
@@ -372,15 +433,24 @@ function suggestNextTime(travelMin) {
   return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0')
 }
 $('pk-close').addEventListener('click', () => pickDialog.close())
-$('pk-save').addEventListener('click', () => {
+$('pk-save').addEventListener('click', async () => {
   const v = $('pk-place').value
   const item = { id: uid(), time: $('pk-time').value, memo: $('pk-memo').value.trim() }
   if (v === '__custom') {
     const nm = $('pk-custom').value.trim()
     if (!nm) return; item.name = nm
   } else item.placeId = v
+  pickDialog.close()
+  if (cloud.active) {
+    try {
+      const row = await addItem({ day: curDay, ...item })
+      S.days[curDay].items.push(toLocalItem(row))
+      save(); renderDays()
+    } catch (err) { alert(err.message || String(err)); refreshCloud() }
+    return
+  }
   S.days[curDay].items.push(item)
-  save(); renderDays(); pickDialog.close()
+  save(); renderDays()
 })
 function renderDday() {
   const el = $('dday')
@@ -498,6 +568,162 @@ $('nearbyWrap').addEventListener('click', e => {
   if (e.target.closest('#candMore')) { candLimit += 12; renderNearby(); return }
   const a = e.target.closest('button[data-add]')
   if (a) openPicker(a.dataset.add, suggestNextTime(+a.dataset.mins))
+})
+
+/* ───────── 함께 쓰기 (Supabase) ───────── */
+let cloudComments = {}
+const openComments = new Set()
+let refreshTimer = null
+
+const toLocalItem = r => ({
+  id: r.id, time: r.at || '', placeId: r.place_id || undefined,
+  name: r.name || undefined, memo: r.memo || '',
+})
+
+async function refreshCloud() {
+  if (!cloud.active) return
+  try {
+    const data = await fetchAll()
+    if (!data) return
+    for (const k of SHARED_KEYS) {
+      if (k === 'dayCount') continue
+      if (data.state[k] !== undefined) S[k] = data.state[k]
+    }
+    const dayCount = Math.max(1, data.state.dayCount || 1, ...data.items.map(i => i.day + 1))
+    S.days = Array.from({ length: dayCount }, (_, d) => ({
+      id: 'd' + d, items: data.items.filter(i => i.day === d).map(toLocalItem),
+    }))
+    cloudComments = {}
+    for (const c of data.comments) (cloudComments[c.item_id] ||= []).push(c)
+    try { localStorage.setItem(KEY, JSON.stringify(S)) } catch (e) { /* ignore */ }
+    renderAll()
+  } catch (e) {
+    cloud.error = String(e.message || e)
+    renderShare()
+  }
+}
+function onCloudChange() {
+  clearTimeout(refreshTimer)
+  refreshTimer = setTimeout(refreshCloud, 250)
+}
+
+function commentPanel(itemId) {
+  const list = cloudComments[itemId] || []
+  const mine = cloud.me?.memberId
+  return `<div class="cmpanel">
+    ${list.length ? list.map(c => `<div class="cm">
+      <div class="cmhead"><b>${esc(c.author)}</b><span>${fmtWhen(c.created_at)}</span>
+        ${c.member_id === mine ? `<button class="cmdel" data-cmdel="${c.id}" aria-label="코멘트 삭제">✕</button>` : ''}</div>
+      <div class="cmbody">${esc(c.body)}</div>
+    </div>`).join('') : `<div class="cmempty">아직 코멘트가 없어요.</div>`}
+    <form class="cmform" data-cmadd="${itemId}">
+      <input name="body" placeholder="코멘트 남기기" maxlength="200" autocomplete="off">
+      <button class="btn small" type="submit">등록</button>
+    </form>
+  </div>`
+}
+function fmtWhen(iso) {
+  const d = new Date(iso), now = new Date()
+  const diff = Math.round((now - d) / 60000)
+  if (diff < 1) return '방금'
+  if (diff < 60) return `${diff}분 전`
+  if (diff < 1440) return `${Math.round(diff / 60)}시간 전`
+  return `${d.getMonth() + 1}/${d.getDate()}`
+}
+
+/* 메뉴 탭의 '함께 쓰기' 카드 */
+async function renderShare() {
+  const el = $('shareBox')
+  if (!cloud.configured) {
+    el.innerHTML = `<div class="card"><div class="rowtop"><span class="pname">👥 함께 쓰기</span></div>
+      <p class="pdesc">공유 서버가 아직 연결되지 않았어요. 지금은 이 기기에만 저장됩니다.</p></div>`
+    return
+  }
+  if (!cloud.active) {
+    el.innerHTML = `<div class="card">
+      <div class="rowtop"><span class="pname">👥 함께 쓰기</span></div>
+      <p class="pdesc">여행을 만들고 초대코드를 공유하면 친구들과 같은 일정을 보고, 일정마다 코멘트를 남길 수 있어요.</p>
+      <div class="acts">
+        <button class="btn small" data-share="create">여행 만들기</button>
+        <button class="btn small ghost" data-share="join">초대코드로 참가</button>
+      </div></div>`
+    return
+  }
+  const st = pushSupported() ? await pushStatus() : 'unsupported'
+  const names = cloud.members.map(m => m.name).join(', ')
+  el.innerHTML = `<div class="card">
+    <div class="rowtop"><span class="pname">👥 ${esc(cloud.trip.name || '우리 여행')}</span>
+      <span class="cat mine">함께 쓰는 중</span></div>
+    <div class="codebox">초대코드 <b>${esc(cloud.trip.code)}</b>
+      <button class="btn small ghost" data-share="copy">복사</button></div>
+    <p class="pdesc">참여자 ${cloud.members.length}명 · ${esc(names)}<br>나: <b>${esc(cloud.me.name)}</b></p>
+    ${cloud.error ? `<p class="pdesc" style="color:var(--bad)">${esc(cloud.error)}</p>` : ''}
+    <div class="acts">
+      ${st === 'unsupported'
+        ? `<span class="chip">이 브라우저는 알림 미지원</span>`
+        : st === 'denied'
+          ? `<span class="chip">알림 차단됨 — 브라우저 설정에서 허용</span>`
+          : `<button class="btn small ${st === 'on' ? 'ghost' : ''}" data-share="${st === 'on' ? 'pushoff' : 'pushon'}">${st === 'on' ? '🔔 알림 끄기' : '🔔 코멘트 알림 받기'}</button>`}
+      <button class="btn small danger" data-share="leave">나가기</button>
+    </div>
+    <p class="hint">아이폰은 홈 화면에 추가한 뒤에야 알림을 받을 수 있어요.</p>
+  </div>`
+}
+
+$('shareBox').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-share]'); if (!b) return
+  const act = b.dataset.share
+  try {
+    if (act === 'create' || act === 'join') { openJoin(act); return }
+    if (act === 'copy') {
+      await navigator.clipboard.writeText(cloud.trip.code)
+      b.textContent = '복사됨 ✓'; return
+    }
+    if (act === 'pushon') { b.disabled = true; await enablePush() }
+    if (act === 'pushoff') { b.disabled = true; await disablePush() }
+    if (act === 'leave') {
+      if (!confirm('이 여행에서 나갈까요? 기기에 남은 데이터는 그대로예요.')) return
+      clearSession()
+    }
+  } catch (err) {
+    alert(err.message || String(err))
+  }
+  renderShare()
+})
+
+/* 참가 다이얼로그 */
+const joinDialog = $('joinDialog')
+let joinMode = 'join'
+function openJoin(mode) {
+  joinMode = mode
+  $('joinTitle').textContent = mode === 'create' ? '여행 만들기' : '초대코드로 참가'
+  $('joinHint').textContent = mode === 'create'
+    ? '만들면 초대코드가 나와요. 친구들에게 코드를 알려주면 같은 일정을 보게 됩니다.'
+    : '친구에게 받은 초대코드와 내 이름을 넣어주세요.'
+  $('jn-codeWrap').hidden = mode === 'create'
+  $('jn-go').textContent = mode === 'create' ? '만들기' : '참가하기'
+  $('jn-err').textContent = ''
+  $('jn-name').value = cloud.me?.name || ''
+  joinDialog.showModal()
+}
+$('jn-close').addEventListener('click', () => joinDialog.close())
+$('jn-go').addEventListener('click', async () => {
+  const name = $('jn-name').value.trim()
+  const code = $('jn-code').value.trim().toUpperCase()
+  if (!name) { $('jn-err').textContent = '이름을 넣어주세요.'; return }
+  if (joinMode === 'join' && !code) { $('jn-err').textContent = '초대코드를 넣어주세요.'; return }
+  $('jn-go').disabled = true
+  try {
+    if (joinMode === 'create') await createTrip('후쿠오카 여행', name)
+    else await joinTrip(code, name)
+    joinDialog.close()
+    await refreshCloud()
+    await renderShare()
+  } catch (err) {
+    $('jn-err').textContent = err.message || String(err)
+  } finally {
+    $('jn-go').disabled = false
+  }
 })
 
 /* ───────── 꿀팁 탭 ───────── */
@@ -637,6 +863,16 @@ function renderAll() {
   fxRate.value = S.rate; fxCalc()
 }
 renderAll()
+
+/* 공유 세션이 있으면 이어서 접속한다 */
+renderShare()
+if (cloud.configured) {
+  initCloud(onCloudChange)
+    .then(resumeTrip)
+    .then(async ok => { if (ok) await refreshCloud() })
+    .catch(e => { cloud.error = String(e.message || e) })
+    .finally(renderShare)
+}
 
 /* PWA: 오프라인 캐시 */
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {

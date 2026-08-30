@@ -37,7 +37,8 @@
 <!-- ══════════ 메뉴 ══════════ -->
 <section class="pane" id="pane-more">
   <h2>메뉴</h2>
-  <p class="desc">여행 준비와 참고 정보는 여기 모아뒀어요.</p>
+  <div id="shareBox"></div>
+  <h3>여행 준비</h3>
   <div class="menulist">
     <button data-open="move">
       <span class="mi">🏨</span>
@@ -180,6 +181,21 @@
 
 <footer>이동시간은 직선거리·노선도 기반 추정치입니다. 실제 시간은 구글맵으로 확인하세요. · 후쿠오카 수첩</footer>
 </div>
+
+<dialog id="joinDialog">
+  <h3 style="margin-top:0" id="joinTitle">친구들과 같이 쓰기</h3>
+  <p class="hint" id="joinHint">같은 초대코드로 들어오면 일정·코멘트가 실시간으로 공유돼요.</p>
+  <div style="display:flex; flex-direction:column; gap:10px; margin-top:12px">
+    <div><label class="f" for="jn-name">내 이름</label><input id="jn-name" placeholder="예: 경민" maxlength="12"></div>
+    <div id="jn-codeWrap"><label class="f" for="jn-code">초대코드</label>
+      <input id="jn-code" placeholder="예: K7QM3P" maxlength="8" autocapitalize="characters" style="text-transform:uppercase"></div>
+    <p class="hint" id="jn-err" style="color:var(--bad)"></p>
+  </div>
+  <div class="acts" style="margin-top:6px">
+    <button class="btn small" id="jn-go">참가하기</button>
+    <button class="btn small ghost" id="jn-close">닫기</button>
+  </div>
+</dialog>
 
 <dialog id="ioDialog">
   <h3 style="margin-top:0" id="ioTitle">데이터 내보내기</h3>

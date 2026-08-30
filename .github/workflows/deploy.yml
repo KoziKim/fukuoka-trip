@@ -24,6 +24,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          # 저장소 Settings → Secrets and variables → Actions → Variables 에 등록.
+          # 비어 있으면 앱은 기기 저장(단독) 모드로 빌드된다.
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          VITE_VAPID_PUBLIC_KEY: ${{ vars.VITE_VAPID_PUBLIC_KEY }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
