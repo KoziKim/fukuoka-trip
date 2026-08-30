@@ -1,5 +1,5 @@
 import './styles.css'
-import { CATS, AIRPORT, PRESET_FOODS, PRESET_SPOTS, HOTEL_PRESETS, TIPS, TIP_SOURCES, PRESET_CHECKS } from './data.js'
+import { CATS, AIRPORT, ICN, PRESET_FOODS, PRESET_SPOTS, HOTEL_PRESETS, TIPS, TIP_SOURCES, PRESET_CHECKS } from './data.js'
 import { hav, routes, routeChips, bestSummary } from './transit.js'
 
 /* ───────── 저장소 ───────── */
@@ -21,7 +21,7 @@ const $ = id => document.getElementById(id)
 
 function allFoods() { return PRESET_FOODS.filter(f => !S.hiddenFoods.includes(f.id)).concat(S.customFoods) }
 function allPlaces() {
-  const places = [{ ...AIRPORT, kind: '공항' }]
+  const places = [{ ...ICN, kind: '공항' }, { ...AIRPORT, kind: '공항' }]
   if (S.hotel && S.hotel.lat) places.push({ id: 'hotel', name: '🏨 ' + (S.hotel.name || '우리 숙소'), lat: S.hotel.lat, lng: S.hotel.lng, kind: '숙소' })
   for (const f of allFoods()) places.push({ ...f, kind: '맛집' })
   for (const s of PRESET_SPOTS) places.push({ ...s, kind: '명소' })
@@ -48,14 +48,31 @@ themeBtn.addEventListener('click', () => {
 paintTheme()
 
 /* ───────── 탭 ───────── */
+/* 하단 탭은 3개(맛집·일정·메뉴)만 두고, 나머지는 메뉴 안에서 한 단계 들어간다 */
+const MAIN_TABS = ['food', 'plan', 'more']
+let backTo = 'more' // 하위 화면에서 '뒤로' 눌렀을 때 돌아갈 곳
+
 function switchTab(name) {
-  document.querySelectorAll('nav.tabs button').forEach(x => x.classList.toggle('on', x.dataset.tab === name))
   document.querySelectorAll('section.pane').forEach(x => x.classList.toggle('on', x.id === 'pane-' + name))
+  const active = MAIN_TABS.includes(name) ? name : 'more'
+  document.querySelectorAll('nav.tabs button').forEach(x => x.classList.toggle('on', x.dataset.tab === active))
   window.scrollTo({ top: 0 })
+}
+/** 하위 화면 열기. from을 주면 '뒤로'가 그 화면으로 돌아간다 */
+function openSub(name, from) {
+  backTo = from || 'more'
+  switchTab(name)
 }
 $('tabs').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return
   switchTab(b.dataset.tab)
+})
+$('pane-more').addEventListener('click', e => {
+  const b = e.target.closest('button[data-open]'); if (!b) return
+  openSub(b.dataset.open, 'more')
+})
+document.querySelectorAll('button[data-back]').forEach(b => {
+  b.addEventListener('click', () => switchTab(backTo))
 })
 
 /* ───────── 맛집 탭 ───────── */
@@ -397,7 +414,7 @@ function renderPlanHotel() {
   </div>`
 }
 $('planHotel').addEventListener('click', e => {
-  if (e.target.closest('button[data-go="move"]')) switchTab('move')
+  if (e.target.closest('button[data-go="move"]')) openSub('move', 'plan')
 })
 
 /* 추천 기준점: 그 날 마지막 일정 → 없으면 숙소 → 없으면 공항 */
@@ -422,7 +439,7 @@ function nearestCandidates(n) {
   const rows = pool
     .filter(p => p.lat != null && !used.has(p.id) && p.id !== base.p.id)
     .map(p => ({ p, r: routes(base.p, p) }))
-    .filter(x => x.r && !x.r.far)
+    .filter(x => x.r && !x.r.far && !x.r.air)
     .sort((a, b) => a.r.dKm - b.r.dKm)
     .slice(0, n)
   return { base, rows }

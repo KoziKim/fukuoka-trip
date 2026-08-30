@@ -18,6 +18,12 @@
   --btn-text:#10151C;
 }
 *{box-sizing:border-box}
+/* 더블탭 확대 차단 (핀치 줌은 그대로 두고 double-tap zoom만 끈다) */
+html{touch-action:manipulation; -webkit-text-size-adjust:100%}
+/* 조작 요소는 더블클릭해도 글자가 잡히지 않게 */
+button, nav.tabs, .tabs, .filters, .daytabs, .chip, .cat, label.f, .mini, .quick, .acts{
+  -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent;
+}
 body{
   margin:0; background:var(--bg); color:var(--ink);
   font-family:"Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
@@ -48,6 +54,23 @@ nav.tabs button{
   font:inherit; font-weight:600; font-size:13.5px; padding:6px 2px; border-radius:10px; cursor:pointer; white-space:nowrap;
 }
 nav.tabs button.on{background:var(--indigo); color:var(--btn-text)}
+/* 메뉴 목록 */
+.menulist{display:flex; flex-direction:column; gap:8px}
+.menulist button{
+  display:flex; align-items:center; gap:12px; width:100%; text-align:left; cursor:pointer;
+  font:inherit; padding:14px 15px; border-radius:14px;
+  border:1px solid var(--line); background:var(--surface); color:var(--ink); box-shadow:var(--shadow);
+}
+.menulist .mi{font-size:20px; flex-shrink:0}
+.menulist .mt{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+.menulist .mt b{font-size:15px; font-weight:700}
+.menulist .mt small{font-size:12.5px; color:var(--muted)}
+.menulist .ma{flex-shrink:0; color:var(--muted); font-size:20px}
+.backbar{
+  font:inherit; font-size:13px; font-weight:600; cursor:pointer; margin:0 0 6px;
+  padding:7px 12px 7px 9px; border-radius:999px;
+  border:1px solid var(--line); background:var(--surface); color:var(--muted);
+}
 section.pane{display:none; padding-top:18px}
 section.pane.on{display:block}
 h2{font-weight:800; font-size:21px; margin:8px 0 4px; letter-spacing:-.01em; text-wrap:balance}
@@ -68,6 +91,7 @@ h3{font-size:15px; margin:20px 0 8px; color:var(--indigo-strong)}
 .chip.metro{background:var(--indigo-soft); color:var(--indigo-strong); font-weight:600}
 .chip.taxi{background:var(--warn-soft); color:var(--warn); font-weight:600}
 .chip.far{background:var(--accent-soft); color:var(--accent); font-weight:600}
+.chip.air{background:var(--indigo-soft); color:var(--indigo-strong); font-weight:600}
 .acts{display:flex; gap:6px; margin-top:10px; flex-wrap:wrap}
 .acts button, .acts a{
   font:inherit; font-size:12.5px; font-weight:600; padding:8px 12px; border-radius:8px;

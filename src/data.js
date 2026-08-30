@@ -10,6 +10,14 @@ export const AIRPORT = {
   roadDetour: 2.2, // 국제선 터미널은 활주로 반대편이라 차로는 크게 돌아간다
 };
 
+/* 출발·귀국 공항. 일정 첫날/마지막날에 넣으면 항공편 구간으로 표시된다 */
+export const ICN = {
+  id: "icn", name: "인천공항 (ICN)", area: "한국",
+  lat: 37.4602, lng: 126.4407,
+  desc: "후쿠오카까지 비행 약 1시간 25분",
+};
+export const FLIGHT_MIN = 85; // 인천 ↔ 후쿠오카 비행시간
+
 export const PRESET_FOODS = [
   {id:"f01", name:"이치란 본점", cat:"라멘", area:"나카스", lat:33.5894, lng:130.4045, price:"¥980~", desc:"돈코츠 라멘 총본점, 24시간 영업. 웨이팅 피하려면 새벽·심야 방문. 본점 한정 나무 상자 라멘."},
   {id:"f02", name:"신신 텐진 본점", cat:"라멘", area:"텐진", lat:33.5944, lng:130.3986, price:"¥820~", desc:"가는 스트레이트 면 + 깔끔한 돈코츠. 연예인 단골집. 야키라멘도 유명."},

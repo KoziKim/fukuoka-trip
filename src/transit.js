@@ -1,5 +1,5 @@
 // 이동시간 추정: 직선거리(하버사인) + 내장 지하철 노선 그래프
-import { STN, LINES, TRANSFERS } from './data.js'
+import { STN, LINES, TRANSFERS, FLIGHT_MIN } from './data.js'
 
 export function hav(a, b) {
   const R = 6371, t = Math.PI / 180
@@ -56,6 +56,8 @@ function accessPoints(p) {
 export function routes(a, b) {
   if (!a || !b || a.lat == null || b.lat == null || a.lat === '' || b.lat === '') return null
   const d = hav(a, b)
+  // 국내 이동으로 볼 수 없는 거리는 항공편 구간으로 다룬다 (인천 ↔ 후쿠오카)
+  if (d > 100) return { dKm: d, air: true, flightMin: FLIGHT_MIN, walk: null, taxi: null, metro: null, far: true }
   const out = { dKm: d, walk: walkMin(d), taxi: null, metro: null, far: d > 12 }
   // 도로 거리는 직선거리보다 길다. 공항 국제선처럼 크게 우회하는 곳은 roadDetour로 따로 지정.
   const detour = Math.max(1.4, a.roadDetour || 0, b.roadDetour || 0)
@@ -77,6 +79,7 @@ export function routes(a, b) {
 export function routeChips(r) {
   if (!r) return ''
   let h = ''
+  if (r.air) return `<span class="chip air">✈️ 항공 약 ${Math.floor(r.flightMin / 60)}시간 ${r.flightMin % 60}분 · 공항 수속 별도</span>`
   if (r.far) {
     h += `<span class="chip far">직선 ${r.dKm.toFixed(1)}km · 니시테츠/JR 등 광역 이동 권장</span>`
     h += `<span class="chip taxi">🚕 택시 약 ${r.taxi.min}분</span>`
@@ -91,6 +94,7 @@ export function routeChips(r) {
 
 export function bestSummary(r) {
   if (!r) return null
+  if (r.air) return `✈️ 항공 약 ${Math.floor(r.flightMin / 60)}시간 ${r.flightMin % 60}분 (수속·대기 별도)`
   if (r.far) return `광역 이동 (직선 ${r.dKm.toFixed(1)}km)`
   if (r.walk <= 15 || !r.metro) return `🚶 도보 약 ${r.walk}분`
   return `🚇 지하철 약 ${r.metro.min}분 (${r.metro.from}→${r.metro.to})`
