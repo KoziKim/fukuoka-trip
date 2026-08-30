@@ -728,7 +728,8 @@ const ACT_LABEL = {
 function renderActivity() {
   const el = $('activityWrap')
   if (!cloud.active || !cloudActivity.length) { el.innerHTML = ''; return }
-  const rows = activityAll ? cloudActivity : cloudActivity.slice(0, 5)
+  const ACT_PREVIEW = 10
+  const rows = activityAll ? cloudActivity : cloudActivity.slice(0, ACT_PREVIEW)
   el.innerHTML = `<div class="nearby">
     <h3 style="margin-top:0">최근 변경</h3>
     <div class="card actlist">${rows.map(a => {
@@ -741,8 +742,8 @@ function renderActivity() {
         <span class="aw">${fmtWhen(a.created_at)}</span>
       </div>`
     }).join('')}</div>
-    ${cloudActivity.length > 5 ? `<div class="acts" style="justify-content:center">
-      <button class="btn small ghost" id="actMore">${activityAll ? '접기' : `더 보기 (${cloudActivity.length - 5}건)`}</button></div>` : ''}
+    ${cloudActivity.length > ACT_PREVIEW ? `<div class="acts" style="justify-content:center">
+      <button class="btn small ghost" id="actMore">${activityAll ? '접기' : `더 보기 (${cloudActivity.length - ACT_PREVIEW}건)`}</button></div>` : ''}
   </div>`
 }
 $('activityWrap').addEventListener('click', e => {
