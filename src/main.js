@@ -1222,6 +1222,8 @@ $('verCheck').addEventListener('click', async () => {
 
 if (import.meta.env.PROD) {
   checkForUpdate()
+  // 앱을 계속 열어두는 경우도 있으니 주기적으로도 확인한다
+  setInterval(() => { if (!updateReady) checkForUpdate() }, 5 * 60 * 1000)
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && !updateReady) checkForUpdate()
   })

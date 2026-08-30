@@ -32,14 +32,17 @@ self.addEventListener('fetch', e => {
     return
   }
 
-  // HTML: 네트워크 우선
+  // HTML: 항상 새로 받는다.
+  // GitHub Pages 는 index.html 에도 Cache-Control: max-age=600 을 붙이고 이 헤더는 바꿀 수 없다.
+  // cache:'reload' 로 브라우저 HTTP 캐시까지 건너뛰어야 배포 직후 새 번들을 가리키는 HTML이 온다.
   if (req.mode === 'navigate') {
     e.respondWith((async () => {
       try {
-        const res = await fetch(req)
+        const res = await fetch(req, { cache: 'reload' })
         if (res && res.ok) (await caches.open(CACHE)).put(req, res.clone())
         return res
       } catch (err) {
+        // 오프라인일 때만 캐시로 대체한다 (여행 중 지하철 등)
         return (await caches.match(req)) || (await caches.match('./index.html')) || Response.error()
       }
     })())
