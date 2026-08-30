@@ -5,6 +5,7 @@ import {
   cloud, initCloud, resumeTrip, createTrip, joinTrip, clearSession, fetchAll, pushState,
   addItem, updateItem, removeItem, addComment, removeComment,
   pushSupported, pushStatus, enablePush, disablePush, isStandalone, stateWriteInfo,
+  listTrips, switchTrip, renameTrip, duplicateTrip,
 } from './cloud.js'
 
 /* ───────── 저장소 ───────── */
@@ -387,6 +388,7 @@ function renderDays() {
   renderDday()
   renderPlanHotel()
   renderNearby()
+  renderActivity()
 }
 $('dayTabs').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return; curDay = +b.dataset.i; renderDays()
@@ -676,6 +678,7 @@ async function refreshCloud() {
     }))
     cloudComments = {}
     for (const c of data.comments) (cloudComments[c.item_id] ||= []).push(c)
+    cloudActivity = data.activity || []
     try { localStorage.setItem(KEY, JSON.stringify(S)) } catch (e) { /* ignore */ }
     renderAll()
   } catch (e) {
@@ -712,6 +715,41 @@ function onCloudChange(kind, payload) {
   clearTimeout(refreshTimer)
   refreshTimer = setTimeout(refreshCloud, 250)
 }
+
+/* 누가 무엇을 바꿨는지 최근 내역 */
+let cloudActivity = []
+let activityAll = false
+const ACT_LABEL = {
+  item_add: ['＋', '일정 추가'],
+  item_edit: ['✎', '일정 수정'],
+  item_del: ['−', '일정 삭제'],
+  comment: ['💬', '코멘트'],
+}
+function renderActivity() {
+  const el = $('activityWrap')
+  if (!cloud.active || !cloudActivity.length) { el.innerHTML = ''; return }
+  const rows = activityAll ? cloudActivity : cloudActivity.slice(0, 5)
+  el.innerHTML = `<div class="nearby">
+    <h3 style="margin-top:0">최근 변경</h3>
+    <div class="card actlist">${rows.map(a => {
+      const [icon, what] = ACT_LABEL[a.action] || ['·', a.action]
+      const place = a.place_id ? (findPlace(a.place_id)?.name || a.label || '') : (a.label || '')
+      return `<div class="act">
+        <span class="ai">${icon}</span>
+        <span class="ab"><b>${esc(a.actor)}</b>님이 ${what}
+          <span class="ap">${esc([a.at, place].filter(Boolean).join(' '))}</span></span>
+        <span class="aw">${fmtWhen(a.created_at)}</span>
+      </div>`
+    }).join('')}</div>
+    ${cloudActivity.length > 5 ? `<div class="acts" style="justify-content:center">
+      <button class="btn small ghost" id="actMore">${activityAll ? '접기' : `더 보기 (${cloudActivity.length - 5}건)`}</button></div>` : ''}
+  </div>`
+}
+$('activityWrap').addEventListener('click', e => {
+  if (!e.target.closest('#actMore')) return
+  activityAll = !activityAll
+  renderActivity()
+})
 
 function commentPanel(itemId) {
   const list = cloudComments[itemId] || []
@@ -768,7 +806,11 @@ async function renderShare() {
   }[st]
   el.innerHTML = `<div class="card">
     <div class="rowtop"><span class="pname">👥 ${esc(cloud.trip.name || '우리 여행')}</span>
-      <span class="cat mine">함께 쓰는 중</span></div>
+      <span class="cat mine">보는 중</span>
+      <button class="btn small ghost" data-share="rename" style="margin-left:auto">이름 변경</button></div>
+    <div class="acts" style="margin-top:8px">
+      <button class="btn small ghost" data-share="trips">🧳 여행 목록 (${myTrips.length}개)</button>
+    </div>
     <div class="codebox">초대코드 <b>${esc(cloud.trip.code)}</b>
       <button class="btn small ghost" data-share="copycode">코드 복사</button></div>
     <div class="acts" style="margin-top:8px">
@@ -789,6 +831,18 @@ $('shareBox').addEventListener('click', async e => {
   const act = b.dataset.share
   try {
     if (act === 'create' || act === 'join') { openJoin(act); return }
+    if (act === 'trips') { openTripDialog(); return }
+    if (act === 'rename') {
+      const input = prompt('여행 이름', cloud.trip.name || '')
+      if (!input || !input.trim()) return
+      const name = uniqueTripName(input, cloud.trip.id)
+      if (name !== input.trim()) toast(`같은 이름이 있어 '${name}' 로 저장했어요`)
+      await renameTrip(name)
+      await refreshTripList()
+      renderTripBar()
+      renderShare()
+      return
+    }
     if (act === 'copycode') {
       await navigator.clipboard.writeText(cloud.trip.code)
       b.textContent = '복사됨 ✓'; return
@@ -819,6 +873,107 @@ $('shareBox').addEventListener('click', async e => {
   renderShare()
 })
 
+/* ───────── 여행 여러 개 관리 ───────── */
+/* 친구들과 함께 쓰는 일정과, 나 혼자 움직이는 일정을 따로 두고 오갈 수 있게 한다 */
+let myTrips = []
+const tripDialog = $('tripDialog')
+
+/** 목록에서 헷갈리지 않게, 같은 이름이 있으면 뒤에 번호를 붙인다 */
+function uniqueTripName(base, exceptTripId) {
+  const want = (base || '').trim() || '내 여행'
+  const taken = new Set(
+    myTrips.filter(t => t.tripId !== exceptTripId).map(t => (t.name || '').trim()),
+  )
+  if (!taken.has(want)) return want
+  for (let n = 2; n < 999; n++) {
+    const cand = `${want} (${n})`
+    if (!taken.has(cand)) return cand
+  }
+  return `${want} (${myTrips.length + 1})`
+}
+
+async function refreshTripList() {
+  if (!cloud.active) { myTrips = []; renderTripBar(); return }
+  try { myTrips = await listTrips() } catch (e) { myTrips = [] }
+  renderTripBar()
+}
+function renderTripBar() {
+  const bar = $('tripBar')
+  if (!cloud.active) { bar.hidden = true; return }
+  bar.hidden = false
+  const name = cloud.trip.name || '우리 여행'
+  bar.innerHTML = `<span class="tn">${esc(name)}</span>
+    ${myTrips.length > 1 ? `<span class="tc">${myTrips.length}개 중</span>` : ''}
+    <span class="tx">바꾸기 ▾</span>`
+}
+function renderTripList() {
+  $('tripList').innerHTML = myTrips.length
+    ? myTrips.map(t => `<button class="triprow ${t.tripId === cloud.trip?.id ? 'on' : ''}" data-trip="${t.tripId}">
+        <span class="ti">
+          <b>${esc(t.name || '이름 없는 여행')}</b>
+          <small>초대코드 ${esc(t.code)} · 내 이름 ${esc(t.myName)}</small>
+        </span>
+        <span class="tk">${t.tripId === cloud.trip?.id ? '보는 중' : '열기'}</span>
+      </button>`).join('')
+    : `<div class="empty">아직 여행이 없어요.</div>`
+}
+function openTripDialog() {
+  renderTripList()
+  tripDialog.showModal()
+  refreshTripList().then(renderTripList)
+}
+$('tripBar').addEventListener('click', openTripDialog)
+$('tripClose').addEventListener('click', () => tripDialog.close())
+$('tripDialog').addEventListener('click', async e => {
+  if (e.target.closest('[data-trip-new]')) { tripDialog.close(); openJoin('create'); return }
+  if (e.target.closest('[data-trip-join]')) { tripDialog.close(); openJoin('join'); return }
+  const copyBtn = e.target.closest('[data-trip-copy]')
+  if (copyBtn) {
+    if (!cloud.active) return
+    const base = cloud.trip.name || '여행'
+    const now = new Date()
+    const stamp = `${now.getMonth() + 1}/${now.getDate()}`
+    const input = prompt('복사본 이름', `${base} 백업 ${stamp}`)
+    if (!input || !input.trim()) return
+    const name = uniqueTripName(input)
+    copyBtn.disabled = true
+    copyBtn.textContent = '복사 중…'
+    try {
+      await duplicateTrip(name)
+      await refreshTripList()
+      renderTripList()
+      toast(`'${name}' 로 복사했어요`)
+    } catch (err) {
+      alert('복사에 실패했어요: ' + (err.message || err))
+    } finally {
+      copyBtn.disabled = false
+      copyBtn.textContent = '📋 지금 여행 복사'
+    }
+    return
+  }
+  const b = e.target.closest('button[data-trip]'); if (!b) return
+  const t = myTrips.find(x => x.tripId === b.dataset.trip)
+  if (!t || t.tripId === cloud.trip?.id) { tripDialog.close(); return }
+  tripDialog.close()
+  switchTrip(t)
+  resetSharedLocal()
+  await refreshCloud()
+  await renderShare()
+  renderTripBar()
+  switchTab('plan')
+  toast(`${t.name || '여행'} 일정으로 바꿨어요`)
+})
+/* 여행을 바꾸면 이전 여행의 값이 남지 않게 공유 항목을 초기화한다 */
+function resetSharedLocal() {
+  const d = defaultState()
+  for (const k of SHARED_KEYS) if (k !== 'dayCount') S[k] = d[k]
+  S.days = [{ id: 'd1', items: [] }]
+  curDay = 0
+  cloudComments = {}
+  cloudActivity = []
+  openComments.clear()
+}
+
 /* 초대링크: ?join=코드 로 열면 코드가 채워진 참가 화면이 바로 뜬다 */
 const inviteUrl = () =>
   `${location.origin}${location.pathname}?join=${encodeURIComponent(cloud.trip.code)}`
@@ -843,6 +998,8 @@ function openJoin(mode, code) {
     ? '만들면 초대코드가 나와요. 친구들에게 코드를 알려주면 같은 일정을 보게 됩니다.'
     : '친구에게 받은 초대코드와 내 이름을 넣어주세요.'
   $('jn-codeWrap').hidden = mode === 'create'
+  $('jn-tripWrap').hidden = mode !== 'create'
+  if (mode === 'create') $('jn-trip').value = myTrips.length ? '' : '친구들과 후쿠오카'
   $('jn-go').textContent = mode === 'create' ? '만들기' : '참가하기'
   $('jn-err').textContent = ''
   $('jn-name').value = cloud.me?.name || ''
@@ -861,11 +1018,17 @@ $('jn-go').addEventListener('click', async () => {
   if (joinMode === 'join' && !code) { $('jn-err').textContent = '초대코드를 넣어주세요.'; return }
   $('jn-go').disabled = true
   try {
-    if (joinMode === 'create') await createTrip('후쿠오카 여행', name)
-    else await joinTrip(code, name)
+    if (joinMode === 'create') {
+      const wanted = $('jn-trip').value.trim() || '내 여행'
+      const unique = uniqueTripName(wanted)
+      await createTrip(unique, name)
+      resetSharedLocal()
+      if (unique !== wanted) toast(`같은 이름이 있어 '${unique}' 로 만들었어요`)
+    } else await joinTrip(code, name)
     joinDialog.close()
     clearInviteParam()
     await refreshCloud()
+    await refreshTripList()
     await renderShare()
     if (joinMode === 'join') { switchTab('plan'); toast('참가했어요! 이제 같은 일정을 봅니다.') }
   } catch (err) {
@@ -1255,6 +1418,7 @@ if (cloud.configured) {
     .then(async ok => { if (ok) await refreshCloud() })
     .catch(e => { cloud.error = String(e.message || e) })
     .finally(async () => {
+      await refreshTripList()
       await renderShare()
       // 초대링크로 들어왔는데 아직 그 여행의 멤버가 아니면 참가 화면을 바로 띄운다
       const code = pendingInviteCode()

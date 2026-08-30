@@ -66,12 +66,97 @@ export async function resumeTrip() {
   }
 }
 
+/** 내가 속한 여행 목록. RLS 가 내 여행만 보여주므로 그대로 쓰면 된다 */
+export async function listTrips() {
+  if (!sb) return []
+  const { data: auth } = await sb.auth.getUser()
+  if (!auth?.user) return []
+  const { data, error } = await sb
+    .from('members')
+    .select('id, name, created_at, trip:trips(id, code, name)')
+    .eq('user_id', auth.user.id)
+    .order('created_at')
+  if (error) throw error
+  return (data || []).filter(r => r.trip).map(r => ({
+    tripId: r.trip.id, code: r.trip.code, name: r.trip.name,
+    memberId: r.id, myName: r.name,
+  }))
+}
+
+/** 다른 여행으로 갈아탄다 */
+export function switchTrip(t) {
+  cloud.trip = { id: t.tripId, code: t.code, name: t.name }
+  cloud.me = { memberId: t.memberId, name: t.myName }
+  cloud.active = true
+  cloud.error = ''
+  saveSession()
+  subscribe()
+}
+
+/**
+ * 지금 여행을 통째로 복사해 새 여행을 만든다. 실수로 지웠을 때를 대비한 백업용.
+ * 일정과 코멘트까지 옮기며, 코멘트는 작성자 이름만 남기고 계정 연결은 끊는다.
+ */
+export async function duplicateTrip(newName) {
+  if (!cloud.active) throw new Error('먼저 여행에 들어가 주세요.')
+  const src = cloud.trip.id
+
+  const [trip, items, comments] = await Promise.all([
+    sb.from('trips').select('state').eq('id', src).single(),
+    sb.from('plan_items').select('id, day, at, place_id, name, memo').eq('trip_id', src).order('day').order('at').order('created_at'),
+    sb.from('comments').select('item_id, author, body').eq('trip_id', src).order('created_at'),
+  ])
+  if (trip.error) throw trip.error
+
+  const made = await sb.rpc('create_trip', { p_name: newName, p_member: cloud.me.name })
+  if (made.error) throw made.error
+  const row = Array.isArray(made.data) ? made.data[0] : made.data
+  const dst = row.trip_id
+
+  if (trip.data?.state) {
+    const { error } = await sb.from('trips').update({ state: trip.data.state }).eq('id', dst)
+    if (error) throw error
+  }
+
+  const srcItems = items.data || []
+  if (srcItems.length) {
+    const { data: newItems, error } = await sb.from('plan_items').insert(
+      srcItems.map(i => ({
+        trip_id: dst, day: i.day, at: i.at, place_id: i.place_id, name: i.name, memo: i.memo,
+        created_by: row.member_id,
+      })),
+    ).select('id')
+    if (error) throw error
+    // 넣은 순서대로 돌아오므로 옛 id ↔ 새 id 를 짝지을 수 있다
+    const idMap = {}
+    srcItems.forEach((it, n) => { if (newItems[n]) idMap[it.id] = newItems[n].id })
+
+    const srcComments = (comments.data || []).filter(c => idMap[c.item_id])
+    if (srcComments.length) {
+      const { error: cErr } = await sb.from('comments').insert(
+        srcComments.map(c => ({
+          trip_id: dst, item_id: idMap[c.item_id], member_id: null,
+          author: c.author, body: c.body,
+        })),
+      )
+      if (cErr) throw cErr
+    }
+  }
+  return { tripId: dst, code: row.trip_code, name: newName, memberId: row.member_id, myName: cloud.me.name }
+}
+
+export async function renameTrip(name) {
+  const { error } = await sb.from('trips').update({ name }).eq('id', cloud.trip.id)
+  if (error) throw error
+  cloud.trip.name = name
+}
+
 export async function createTrip(tripName, memberName) {
   await ensureAuth()
   const { data, error } = await sb.rpc('create_trip', { p_name: tripName, p_member: memberName })
   if (error) throw error
   const row = Array.isArray(data) ? data[0] : data
-  return afterJoin(row, memberName)
+  return afterJoin(row, memberName, tripName)
 }
 
 export async function joinTrip(code, memberName) {
@@ -85,8 +170,8 @@ export async function joinTrip(code, memberName) {
   return afterJoin(row, memberName)
 }
 
-async function afterJoin(row, memberName) {
-  cloud.trip = { id: row.trip_id, code: row.trip_code, name: '' }
+async function afterJoin(row, memberName, tripName) {
+  cloud.trip = { id: row.trip_id, code: row.trip_code, name: tripName || '' }
   cloud.me = { memberId: row.member_id, name: memberName }
   cloud.active = true
   cloud.error = ''
@@ -100,11 +185,12 @@ async function afterJoin(row, memberName) {
 export async function fetchAll() {
   if (!cloud.active) return null
   const t = cloud.trip.id
-  const [trip, items, comments, members] = await Promise.all([
+  const [trip, items, comments, members, activity] = await Promise.all([
     sb.from('trips').select('id, code, name, state').eq('id', t).single(),
     sb.from('plan_items').select('*').eq('trip_id', t).order('day').order('at'),
     sb.from('comments').select('*').eq('trip_id', t).order('created_at'),
     sb.from('members').select('id, name').eq('trip_id', t),
+    sb.from('activity').select('*').eq('trip_id', t).order('created_at', { ascending: false }).limit(30),
   ])
   if (trip.error) throw trip.error
   cloud.trip.name = trip.data.name
@@ -113,6 +199,7 @@ export async function fetchAll() {
     state: trip.data.state || {},
     items: items.data || [],
     comments: comments.data || [],
+    activity: activity.data || [],
   }
 }
 
@@ -179,6 +266,7 @@ function subscribe() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'plan_items', filter }, p => onChange('plan_items', p))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'comments', filter }, p => onChange('comments', p))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'members', filter }, () => onChange('members'))
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'activity', filter }, () => onChange('activity'))
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'trips', filter: `id=eq.${cloud.trip.id}` }, () => onChange('state'))
     .subscribe()
 }

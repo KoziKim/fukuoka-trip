@@ -114,6 +114,7 @@
 <section class="pane" id="pane-plan">
   <h2>여행 계획표</h2>
   <p class="desc">시간대별로 장소를 넣으면 앞뒤 장소 사이 이동시간이 자동 계산됩니다. 아래 '가까운 곳'에서 바로 일정에 넣을 수 있어요.</p>
+  <button class="tripbar" id="tripBar" hidden></button>
   <div id="planHotel"></div>
   <div class="card" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
     <label class="f" for="tripStart" style="margin:0">여행 시작일</label>
@@ -123,6 +124,7 @@
   <div class="daytabs" id="dayTabs"></div>
   <div id="dayView"></div>
   <div id="nearbyWrap"></div>
+  <div id="activityWrap"></div>
 </section>
 
 <!-- ══════════ 홈 화면 설치 ══════════ -->
@@ -213,6 +215,18 @@
 <footer>이동시간은 직선거리·노선도 기반 추정치입니다. 실제 시간은 구글맵으로 확인하세요. · 후쿠오카 수첩</footer>
 </div>
 
+<dialog id="tripDialog">
+  <h3 style="margin-top:0">여행 바꾸기</h3>
+  <p class="hint">일정을 여러 개 두고 오갈 수 있어요. 친구들과 함께 쓰는 일정과, 나 혼자 움직이는 일정을 따로 관리하세요.</p>
+  <div id="tripList" style="margin-top:12px"></div>
+  <div class="acts" style="margin-top:12px">
+    <button class="btn small" data-trip-new>+ 새 여행</button>
+    <button class="btn small ghost" data-trip-join>초대코드로 참가</button>
+    <button class="btn small ghost" data-trip-copy>📋 지금 여행 복사</button>
+    <button class="btn small ghost" id="tripClose">닫기</button>
+  </div>
+</dialog>
+
 <dialog id="revDialog">
   <div class="rvhead">
     <h3 id="rv-title" style="margin:0"></h3>
@@ -228,6 +242,8 @@
   <p class="hint" id="joinHint">같은 초대코드로 들어오면 일정·코멘트가 실시간으로 공유돼요.</p>
   <div style="display:flex; flex-direction:column; gap:10px; margin-top:12px">
     <div><label class="f" for="jn-name">내 이름</label><input id="jn-name" placeholder="예: 경민" maxlength="12"></div>
+    <div id="jn-tripWrap" hidden><label class="f" for="jn-trip">여행 이름</label>
+      <input id="jn-trip" placeholder="예: 친구들과 후쿠오카" maxlength="24"></div>
     <div id="jn-codeWrap"><label class="f" for="jn-code">초대코드</label>
       <input id="jn-code" placeholder="예: K7QM3P" maxlength="8" autocapitalize="characters" style="text-transform:uppercase"></div>
     <p class="hint" id="jn-err" style="color:var(--bad)"></p>
