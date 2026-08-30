@@ -63,6 +63,36 @@ themeBtn.addEventListener('click', () => {
 })
 paintTheme()
 
+/* ───────── AI 별점 ───────── */
+const starBar = r => `<span class="stars" style="--pct:${(r / 5) * 100}%"><span class="track">★★★★★</span><span class="fill">★★★★★</span></span>`
+/** 맛집 카드용 — 누르면 산출 근거가 열린다 */
+const ratingBtn = p => p.rating
+  ? `<button class="ratebtn" data-rev="${p.id}" aria-label="${esc(p.name)} 별점 근거 보기">${starBar(p.rating)}<b>${p.rating.toFixed(1)}</b><span class="ic">ⓘ</span></button>`
+  : ''
+/** 목록용 — 자리를 적게 쓰는 형태 */
+const ratingMini = p => p.rating
+  ? `<span class="rate-mini">${starBar(p.rating)}<b>${p.rating.toFixed(1)}</b></span>` : ''
+
+const revDialog = $('revDialog')
+function openReview(id) {
+  const p = findPlace(id)
+  if (!p || !p.rating) return
+  $('rv-title').textContent = p.name
+  $('rv-stars').innerHTML = `${starBar(p.rating)}<b>${p.rating.toFixed(1)}</b>`
+  const r = p.review || {}
+  $('rv-body').innerHTML =
+    (r.sum ? `<p class="rvsum">${esc(r.sum)}</p>` : '') +
+    (r.good ? `<div class="rvrow good"><span class="k">장점</span><span>${esc(r.good)}</span></div>` : '') +
+    (r.bad ? `<div class="rvrow bad"><span class="k">단점</span><span>${esc(r.bad)}</span></div>` : '') +
+    (r.note ? `<div class="rvrow"><span class="k">참고</span><span>${esc(r.note)}</span></div>` : '')
+  revDialog.showModal()
+}
+$('rv-close').addEventListener('click', () => revDialog.close())
+document.addEventListener('click', e => {
+  const b = e.target.closest('button[data-rev]')
+  if (b) openReview(b.dataset.rev)
+})
+
 /* ───────── 탭 ───────── */
 /* 하단 탭은 3개(맛집·일정·메뉴)만 두고, 나머지는 메뉴 안에서 한 단계 들어간다 */
 const MAIN_TABS = ['food', 'plan', 'more']
@@ -92,12 +122,18 @@ document.querySelectorAll('button[data-back]').forEach(b => {
 })
 
 /* ───────── 맛집 탭 ───────── */
-let foodFilter = '전체'
+let foodFilter = '전체', foodSort = 'rating'
 function renderFoodFilters() {
   const cats = ['전체', '⭐ 즐겨찾기', ...CATS]
   $('foodFilters').innerHTML = cats.map(c =>
     `<button class="${c === foodFilter ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`).join('')
+  $('foodSort').innerHTML = `<span>정렬</span>` + [['rating', '별점 높은 순'], ['dist', '숙소에서 가까운 순']]
+    .map(([k, t]) => `<button class="${k === foodSort ? 'on' : ''}" data-s="${k}">${t}</button>`).join('')
 }
+$('foodSort').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return
+  foodSort = b.dataset.s; renderFoodFilters(); renderFoods()
+})
 $('foodFilters').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return
   foodFilter = b.dataset.c; renderFoodFilters(); renderFoods()
@@ -107,9 +143,13 @@ function renderFoods() {
   let list = allFoods()
   if (foodFilter === '⭐ 즐겨찾기') list = list.filter(f => (S.foodMeta[f.id] || {}).fav)
   else if (foodFilter !== '전체') list = list.filter(f => f.cat === foodFilter)
-  if (hotel) list = list.slice().sort((a, b) => {
-    const da = a.lat ? hav(hotel, a) : 9e9, db = b.lat ? hav(hotel, b) : 9e9; return da - db
-  })
+  if (foodSort === 'rating') {
+    list = list.slice().sort((a, b) => (b.rating || 0) - (a.rating || 0))
+  } else if (hotel) {
+    list = list.slice().sort((a, b) => {
+      const da = a.lat ? hav(hotel, a) : 9e9, db = b.lat ? hav(hotel, b) : 9e9; return da - db
+    })
+  }
   const el = $('foodList')
   if (!list.length) { el.innerHTML = `<div class="empty">해당하는 맛집이 없어요. 아래에서 추가해 보세요.</div>`; return }
   el.innerHTML = list.map(f => {
@@ -123,6 +163,7 @@ function renderFoods() {
         <span class="area">${esc(f.area || '')}</span>
         ${f.price ? `<span class="area">· ${esc(f.price)}</span>` : ''}
       </div>
+      ${f.rating ? `<div style="margin-top:7px">${ratingBtn(f)}</div>` : ''}
       ${f.desc ? `<p class="pdesc">${esc(f.desc)}</p>` : ''}
       ${r ? `<div class="chips">${routeChips(r)}</div>`
         : (hotel ? `<div class="chips"><span class="chip">위치 미등록 — 지도 링크로 확인</span></div>`
@@ -248,7 +289,7 @@ function renderHotel() {
   html += `<h3>숙소에서 가까운 순</h3>` + rows.map(x => `
     <div class="card">
       <div class="rowtop"><span class="pname" style="font-size:14.5px">${esc(x.p.name)}</span>
-        <span class="cat plain">${x.kind}</span></div>
+        <span class="cat plain">${x.kind}</span>${ratingMini(x.p)}</div>
       <div class="chips">${routeChips(x.r)}</div>
     </div>`).join('')
   el.innerHTML = html
@@ -550,7 +591,7 @@ function renderNearby() {
       return `<div class="cand">
         <div class="info">
           <div class="nm">${esc(x.p.name)}</div>
-          <div class="meta">${esc(x.p.kind)}${x.p.cat ? ' · ' + esc(x.p.cat) : ''}${x.p.area ? ' · ' + esc(x.p.area) : ''}</div>
+          <div class="meta">${ratingMini(x.p)}${x.p.rating ? ' · ' : ''}${esc(x.p.kind)}${x.p.cat ? ' · ' + esc(x.p.cat) : ''}${x.p.area ? ' · ' + esc(x.p.area) : ''}</div>
         </div>
         <div class="t">${mins != null ? `${how}<br>${mins}분` : `${how}<br>${x.r.dKm.toFixed(1)}km`}</div>
         <button class="add" data-add="${x.p.id}" data-mins="${mins ?? 45}" aria-label="${esc(x.p.name)} 일정에 추가">+</button>
@@ -727,20 +768,43 @@ $('jn-go').addEventListener('click', async () => {
 })
 
 /* ───────── 꿀팁 탭 ───────── */
+/* 항목은 "문자열" 또는 { t, pri } 형태 — pri 1=필수, 2=중요, 없으면 일반 */
+const normEntry = x => (typeof x === 'string' ? { t: x, pri: 0 } : { t: x.t, pri: x.pri || 0 })
+const priBadge = p => p === 1 ? `<span class="pri p1">필수</span>` : p === 2 ? `<span class="pri p2">중요</span>` : ''
+const byPri = (a, b) => (a.pri || 9) - (b.pri || 9)
+
+let onlyImportantTips = false, onlyImportantChecks = false
+function renderPriFilter(el, on, label) {
+  $(el).innerHTML = `<span>보기</span>`
+    + [[false, '전체'], [true, label]].map(([v, t]) =>
+      `<button class="${v === on ? 'on' : ''}" data-v="${v}">${t}</button>`).join('')
+}
+$('tipFilter').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return
+  onlyImportantTips = b.dataset.v === 'true'; renderTips()
+})
+$('checkFilter').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return
+  onlyImportantChecks = b.dataset.v === 'true'; renderChecks()
+})
+
 function renderTips() {
+  renderPriFilter('tipFilter', onlyImportantTips, '필수·중요만')
   let html = ''
   TIPS.forEach((cat, ci) => {
-    const items = cat.items.map((t, ti) => ({ t, key: `p${ci}-${ti}`, custom: false }))
+    const items = cat.items.map((raw, ti) => ({ ...normEntry(raw), key: `p${ci}-${ti}`, custom: false }))
       .filter(x => !S.removedTips.includes(x.key))
-    const customs = S.customTips.filter(x => x.cat === cat.c).map(x => ({ t: x.text, key: x.id, custom: true }))
-    const all = [...items, ...customs]
+    const customs = S.customTips.filter(x => x.cat === cat.c).map(x => ({ t: x.text, pri: 0, key: x.id, custom: true }))
+    let all = [...items, ...customs].sort(byPri)
+    if (onlyImportantTips) all = all.filter(x => x.pri === 1 || x.pri === 2)
     if (!all.length) return
     html += `<div class="tipcat"><h3>${esc(cat.c)}</h3><div class="card" style="padding:6px 16px">` +
-      all.map(x => `<div class="tip"><span class="mark">${x.custom ? '✎' : '◦'}</span><span>${esc(x.t)}</span>
+      all.map(x => `<div class="tip"><span class="mark">${x.custom ? '✎' : '◦'}</span>
+        <span>${priBadge(x.pri)}${esc(x.t)}</span>
         <span class="del"><button data-key="${esc(x.key)}" data-custom="${x.custom}" aria-label="팁 삭제">✕</button></span></div>`).join('')
       + `</div></div>`
   })
-  $('tipList').innerHTML = html
+  $('tipList').innerHTML = html || `<div class="empty">해당하는 팁이 없어요.</div>`
   $('tipSrcs').innerHTML = '출처: ' + TIP_SOURCES.map(s => `<a href="${s[1]}" target="_blank" rel="noopener">${esc(s[0])}</a>`).join(' · ')
 }
 $('tipList').addEventListener('click', e => {
@@ -761,16 +825,21 @@ $('tipForm').addEventListener('submit', e => {
 
 /* ───────── 준비 탭 ───────── */
 function renderChecks() {
-  const rows = [
-    ...PRESET_CHECKS.map((t, i) => ({ t, key: 'c' + i, custom: false })).filter(x => !S.removedChecks.includes(x.key)),
-    ...S.customChecks.map(x => ({ t: x.text, key: x.id, custom: true })),
-  ]
-  $('checkList').innerHTML = rows.length ? rows.map(x => `
+  renderPriFilter('checkFilter', onlyImportantChecks, '필수·중요만')
+  let rows = [
+    ...PRESET_CHECKS.map((raw, i) => ({ ...normEntry(raw), key: 'c' + i, custom: false }))
+      .filter(x => !S.removedChecks.includes(x.key)),
+    ...S.customChecks.map(x => ({ t: x.text, pri: 0, key: x.id, custom: true })),
+  ].sort(byPri)
+  if (onlyImportantChecks) rows = rows.filter(x => x.pri === 1 || x.pri === 2)
+  const done = rows.filter(x => S.checks[x.key]).length
+  $('checkList').innerHTML = rows.length ? `
+    <div class="ckprogress"><b>${done}/${rows.length}</b> 완료</div>` + rows.map(x => `
     <div class="checkrow ${S.checks[x.key] ? 'done' : ''}">
       <input type="checkbox" id="ck-${esc(x.key)}" data-key="${esc(x.key)}" ${S.checks[x.key] ? 'checked' : ''}>
-      <label for="ck-${esc(x.key)}">${esc(x.t)}</label>
+      <label for="ck-${esc(x.key)}">${priBadge(x.pri)}${esc(x.t)}</label>
       <button class="rm" data-key="${esc(x.key)}" data-custom="${x.custom}">✕</button>
-    </div>`).join('') : `<div class="empty">체크리스트가 비었어요.</div>`
+    </div>`).join('') : `<div class="empty">해당하는 준비물이 없어요.</div>`
 }
 $('checkList').addEventListener('change', e => {
   const c = e.target.closest('input[type=checkbox]'); if (!c) return

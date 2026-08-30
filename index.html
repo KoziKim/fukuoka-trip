@@ -63,6 +63,7 @@
   <h2>맛집 리스트</h2>
   <p class="desc">기본으로 담아둔 인기 맛집에 내 맛집을 추가하세요. 숙소를 설정하면 각 맛집까지 걸리는 시간이 표시됩니다.</p>
   <div class="filters" id="foodFilters"></div>
+  <div class="sortrow" id="foodSort"></div>
   <div id="foodList"></div>
   <button class="btn" id="addFoodBtn">+ 맛집 추가</button>
   <form class="editor" id="foodEditor" hidden>
@@ -126,6 +127,7 @@
   <button class="backbar" data-back>← 메뉴</button>
   <h2>여행 꿀팁</h2>
   <p class="desc">인터넷에 흩어진 후쿠오카 정보를 모아뒀어요. 내 팁도 추가할 수 있습니다.</p>
+  <div class="sortrow" id="tipFilter"></div>
   <div id="tipList"></div>
   <form class="editor" id="tipForm">
     <div class="grid">
@@ -143,6 +145,7 @@
   <h2>여행 준비</h2>
 
   <h3>준비물 체크리스트</h3>
+  <div class="sortrow" id="checkFilter"></div>
   <div class="card" id="checkList"></div>
   <form id="checkForm" style="display:flex; gap:8px; margin-bottom:24px">
     <input id="ck-text" placeholder="준비물 추가" style="flex:1">
@@ -181,6 +184,16 @@
 
 <footer>이동시간은 직선거리·노선도 기반 추정치입니다. 실제 시간은 구글맵으로 확인하세요. · 후쿠오카 수첩</footer>
 </div>
+
+<dialog id="revDialog">
+  <div class="rvhead">
+    <h3 id="rv-title" style="margin:0"></h3>
+    <div id="rv-stars"></div>
+  </div>
+  <div id="rv-body"></div>
+  <p class="hint">AI가 평판·가격·접근성·한국에서의 희소성을 종합해 매긴 참고용 점수예요.</p>
+  <div class="acts"><button class="btn small ghost" id="rv-close">닫기</button></div>
+</dialog>
 
 <dialog id="joinDialog">
   <h3 style="margin-top:0" id="joinTitle">친구들과 같이 쓰기</h3>
