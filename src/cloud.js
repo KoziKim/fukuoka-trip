@@ -198,14 +198,11 @@ export async function pushBackendReady() {
   if (backendReady !== null) return backendReady
   if (!cloudConfigured) return (backendReady = false)
   try {
-    const r = await fetch(`${SUPABASE_URL}/functions/v1/notify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
-      body: '{}',
-    })
-    backendReady = r.status !== 404   // 배포돼 있으면 comment_id 없다고 400을 준다
+    // 헤더 없는 단순 GET 이라 프리플라이트가 붙지 않는다. 배포돼 있으면 200 {ok:true}
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/notify`)
+    backendReady = r.status === 200
   } catch (e) {
-    backendReady = false
+    backendReady = false   // CORS 차단이나 네트워크 오류
   }
   return backendReady
 }

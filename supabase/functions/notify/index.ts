@@ -18,7 +18,18 @@ webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE)
 
 const db = createClient(SUPABASE_URL, SERVICE_KEY)
 
+// 앱이 브라우저에서 "이 함수가 배포돼 있나"를 확인하므로 CORS 를 열어둔다
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'content-type, x-hook-secret, apikey, authorization',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+}
+
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS })
+  // 배포 여부 확인용. 비밀값 없이도 답하지만 아무 정보도 노출하지 않는다.
+  if (req.method === 'GET') return json({ ok: true }, 200)
+
   try {
     // --no-verify-jwt 로 열려 있으므로, DB 트리거가 보내는 비밀 헤더로 호출자를 확인한다
     if (HOOK_SECRET && req.headers.get('x-hook-secret') !== HOOK_SECRET) {
@@ -84,6 +95,6 @@ Deno.serve(async (req) => {
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { ...CORS, 'Content-Type': 'application/json' },
   })
 }
