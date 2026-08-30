@@ -24,6 +24,14 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url)
   const sameOrigin = url.origin === self.location.origin
 
+  // 버전 확인 파일은 절대 캐시하지 않는다. 캐시하면 새 버전을 영영 못 알아챈다.
+  if (sameOrigin && url.pathname.endsWith('/version.json')) {
+    e.respondWith(fetch(req, { cache: 'no-store' }).catch(() => new Response('{}', {
+      headers: { 'Content-Type': 'application/json' },
+    })))
+    return
+  }
+
   // HTML: 네트워크 우선
   if (req.mode === 'navigate') {
     e.respondWith((async () => {

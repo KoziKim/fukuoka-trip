@@ -1,6 +1,8 @@
 // 코멘트가 달리면 같은 여행의 다른 멤버들에게 웹 푸시를 보낸다.
+// DB 트리거가 호출하며, JWT 대신 공유 비밀 헤더로 호출자를 확인한다.
 // 배포:  supabase functions deploy notify --no-verify-jwt
-// 시크릿: supabase secrets set VAPID_PUBLIC_KEY=... VAPID_PRIVATE_KEY=... VAPID_SUBJECT=mailto:...
+// 시크릿: supabase secrets set VAPID_PUBLIC_KEY=... VAPID_PRIVATE_KEY=... \
+//           VAPID_SUBJECT=mailto:... NOTIFY_HOOK_SECRET=...
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3.6.7'
 
@@ -10,6 +12,7 @@ const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY')!
 const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY')!
 const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') ?? 'mailto:trip@example.com'
 const APP_URL = Deno.env.get('APP_URL') ?? 'https://kozikim.github.io/fukuoka-trip/'
+const HOOK_SECRET = Deno.env.get('NOTIFY_HOOK_SECRET') ?? ''
 
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE)
 
@@ -17,6 +20,10 @@ const db = createClient(SUPABASE_URL, SERVICE_KEY)
 
 Deno.serve(async (req) => {
   try {
+    // --no-verify-jwt 로 열려 있으므로, DB 트리거가 보내는 비밀 헤더로 호출자를 확인한다
+    if (HOOK_SECRET && req.headers.get('x-hook-secret') !== HOOK_SECRET) {
+      return json({ error: 'forbidden' }, 403)
+    }
     const { comment_id } = await req.json()
     if (!comment_id) return json({ error: 'comment_id required' }, 400)
 

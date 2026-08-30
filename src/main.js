@@ -16,10 +16,16 @@ const defaultState = () => ({
   checks: {}, customChecks: [], removedChecks: [],
   expenses: [],      // 공동 지출 — 여행 참여자 모두에게 공유된다
   myExpenses: [],    // 개인 지출 — 이 기기에만 남는다 (공유 대상 아님)
-  rate: 950,
+  rate: 860,
+  rateMigrated: true,
 })
 let S = defaultState()
 try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(defaultState(), JSON.parse(raw)) } catch (e) { /* 프라이빗 모드 등 */ }
+// 기본 환율을 950에서 860으로 바꿨다. 예전 기본값을 그대로 쓰던 사람은 한 번만 같이 옮겨준다.
+if (!S.rateMigrated) {
+  if (S.rate === 950) S.rate = 860
+  S.rateMigrated = true
+}
 /* 공유 상태로 올릴 항목 — 일정(plan_items)과 코멘트는 별도 테이블이라 여기 넣지 않는다 */
 const SHARED_KEYS = ['hotel', 'customFoods', 'foodMeta', 'hiddenFoods', 'customTips', 'removedTips',
   'checks', 'customChecks', 'removedChecks', 'expenses', 'rate', 'tripStart', 'dayCount']
@@ -941,7 +947,7 @@ $('checkForm').addEventListener('submit', e => {
 const fxJpy = $('fx-jpy'), fxRate = $('fx-rate'), fxKrw = $('fx-krw')
 function fxCalc() { const j = parseFloat(fxJpy.value) || 0; fxKrw.textContent = Math.round(j * (parseFloat(fxRate.value) || 0) / 100).toLocaleString() + '원' }
 fxJpy.addEventListener('input', fxCalc)
-fxRate.addEventListener('input', () => { S.rate = parseFloat(fxRate.value) || 950; save(); fxCalc(); renderExpenses() })
+fxRate.addEventListener('input', () => { S.rate = parseFloat(fxRate.value) || 860; save(); fxCalc(); renderExpenses() })
 let expScope = 'shared'
 const expList = () => (expScope === 'shared' ? S.expenses : S.myExpenses)
 
@@ -1078,10 +1084,59 @@ if (cloud.configured) {
     })
 }
 
+/* ───────── 버전 확인 · 업데이트 ───────── */
+/* 서비스워커 갱신만 믿으면 (특히 아이폰 홈 화면 앱에서) 새 배포가 한참 안 잡힌다.
+   그래서 앱이 직접 version.json 을 확인하고, 다르면 사용자에게 갱신 버튼을 띄운다. */
+const BUILD_ID = typeof __BUILD_ID__ === 'string' ? __BUILD_ID__ : 'dev'
+let updateReady = false
+
+async function fetchLatestBuild() {
+  const r = await fetch(`./version.json?t=${Date.now()}`, { cache: 'no-store' })
+  if (!r.ok) throw new Error('version check failed')
+  return (await r.json()).build
+}
+
+async function checkForUpdate({ manual = false } = {}) {
+  try {
+    const latest = await fetchLatestBuild()
+    if (latest && latest !== BUILD_ID) {
+      updateReady = true
+      showUpdateBar()
+    } else if (manual) {
+      toast('이미 최신 버전이에요.')
+    }
+  } catch (e) {
+    if (manual) toast('업데이트 확인에 실패했어요. 연결을 확인해 주세요.')
+  }
+}
+
+function showUpdateBar() {
+  if ($('updateBar')) return
+  const el = document.createElement('div')
+  el.id = 'updateBar'
+  el.innerHTML = `<span>새 버전이 나왔어요</span><button type="button">지금 업데이트</button>`
+  el.querySelector('button').addEventListener('click', applyUpdate)
+  document.body.appendChild(el)
+  requestAnimationFrame(() => el.classList.add('on'))
+}
+
+/** 오래된 캐시를 지우고 새로 받아온다. 서비스워커가 옛 화면을 붙들고 있어도 확실히 넘어간다 */
+async function applyUpdate() {
+  try {
+    if ('caches' in window) {
+      const keys = await caches.keys()
+      await Promise.all(keys.map(k => caches.delete(k)))
+    }
+    const reg = await navigator.serviceWorker?.getRegistration()
+    await reg?.update()
+  } catch (e) { /* 실패해도 새로고침은 시도한다 */ }
+  location.reload()
+}
+
 /* PWA: 오프라인 캐시 + 새 버전 자동 반영 */
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   // 페이지를 열 때 이미 서비스워커가 있었는지 기억해 둔다.
-  // 첫 설치 때도 controllerchange가 한 번 도는데, 그때까지 새로고침하면 헛도는 느낌이 난다.
+  // 첫 설치 때도 controllerchange가 한 번 도는데, 그때 새로고침하면 헛도는 느낌이 난다.
   const hadController = Boolean(navigator.serviceWorker.controller)
   let reloading = false
   navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -1090,13 +1145,9 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
     location.reload()
   })
 
-  navigator.serviceWorker.register('./sw.js').then(reg => {
+  // updateViaCache:'none' — sw.js 자체가 HTTP 캐시에서 나오지 않게 한다
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(reg => {
     reg.update().catch(() => { /* 오프라인 */ })
-    // 홈 화면 앱은 오래 떠 있으니, 다시 볼 때마다 새 버전이 있는지 확인한다
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) reg.update().catch(() => { /* 오프라인 */ })
-    })
-    // 새 버전이 대기 중이면 바로 넘긴다
     reg.addEventListener('updatefound', () => {
       const sw = reg.installing
       if (!sw) return
@@ -1104,5 +1155,23 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
         if (sw.state === 'installed' && navigator.serviceWorker.controller) sw.postMessage('skipWaiting')
       })
     })
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) reg.update().catch(() => { /* 오프라인 */ })
+    })
   }).catch(() => { /* 미지원 환경 무시 */ })
+}
+
+$('verText').textContent = `버전 ${BUILD_ID}`
+$('verCheck').addEventListener('click', async () => {
+  const b = $('verCheck')
+  b.disabled = true; b.textContent = '확인 중…'
+  await checkForUpdate({ manual: true })
+  b.disabled = false; b.textContent = '업데이트 확인'
+})
+
+if (import.meta.env.PROD) {
+  checkForUpdate()
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && !updateReady) checkForUpdate()
+  })
 }
