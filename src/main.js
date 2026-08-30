@@ -103,7 +103,7 @@ document.addEventListener('click', e => {
 
 /* ───────── 탭 ───────── */
 /* 하단 탭은 3개(맛집·일정·메뉴)만 두고, 나머지는 메뉴 안에서 한 단계 들어간다 */
-const MAIN_TABS = ['food', 'plan', 'more']
+const MAIN_TABS = ['food', 'plan', 'exp', 'more']
 let backTo = 'more' // 하위 화면에서 '뒤로' 눌렀을 때 돌아갈 곳
 
 function switchTab(name) {
@@ -948,40 +948,64 @@ const fxJpy = $('fx-jpy'), fxRate = $('fx-rate'), fxKrw = $('fx-krw')
 function fxCalc() { const j = parseFloat(fxJpy.value) || 0; fxKrw.textContent = Math.round(j * (parseFloat(fxRate.value) || 0) / 100).toLocaleString() + '원' }
 fxJpy.addEventListener('input', fxCalc)
 fxRate.addEventListener('input', () => { S.rate = parseFloat(fxRate.value) || 860; save(); fxCalc(); renderExpenses() })
+/* ───────── 경비 탭 ───────── */
 let expScope = 'shared'
-const expList = () => (expScope === 'shared' ? S.expenses : S.myExpenses)
+const CAT_OPTS = ['식비', '교통', '쇼핑', '숙박', '입장료', '기타']
+const krw = j => Math.round(j * S.rate / 100).toLocaleString()
+const sum = rows => rows.reduce((s, x) => s + x.jpy, 0)
+/** 공동 지출을 나눌 인원 수 */
+const headcount = () => (cloud.active && cloud.members.length ? cloud.members.length : 1)
 
-function renderExpenses() {
-  $('expScope').innerHTML = [['shared', '👥 공동 지출'], ['personal', '🙋 개인 지출']]
-    .map(([k, t]) => `<button class="${k === expScope ? 'on' : ''}" data-x="${k}">${t}</button>`).join('')
-  $('expScopeHint').textContent = expScope === 'shared'
+function renderExpSummary() {
+  const shared = sum(S.expenses), mine = sum(S.myExpenses)
+  const n = headcount()
+  const myShare = Math.round(shared / n)
+  const burden = mine + myShare
+  $('expSummary').innerHTML = `<div class="card expsum">
+    <div class="er"><span>👥 공동 지출</span><b>¥${shared.toLocaleString()}</b><span class="sub">${S.expenses.length}건</span></div>
+    <div class="er"><span>🙋 내 지출</span><b>¥${mine.toLocaleString()}</b><span class="sub">${S.myExpenses.length}건</span></div>
+    <div class="er tot"><span>내 총부담</span><b>¥${burden.toLocaleString()}</b><span class="sub">≈ ${krw(burden)}원</span></div>
+    <p class="hint" style="margin:6px 0 0">내 지출 + 공동 지출을 ${n}명으로 나눈 몫(¥${myShare.toLocaleString()})</p>
+  </div>`
+}
+
+function expPanelHtml() {
+  const isShared = expScope === 'shared'
+  const rows = isShared ? S.expenses : S.myExpenses
+  const total = sum(rows)
+
+  let html = `<p class="hint" style="margin:0 0 10px">${isShared
     ? (cloud.active ? '여행 참여자 모두에게 똑같이 보이고, 누가 냈는지도 함께 기록돼요.'
-                    : '함께 쓰기를 연결하면 이 목록이 친구들과 공유돼요. 지금은 이 기기에만 저장됩니다.')
-    : '나만 보는 지출이에요. 공유되지 않고 이 기기에만 남습니다.'
+                    : '함께 쓰기를 연결하면 친구들과 공유돼요. 지금은 이 기기에만 저장됩니다.')
+    : '나만 보는 지출이에요. 공유되지 않고 이 기기에만 남습니다.'}</p>`
 
-  const rows = expList()
-  const el = $('expList')
+  html += `<form class="editor" data-expform="${expScope}">
+    <div class="grid">
+      <div class="full"><label class="f">내역</label><input name="desc" placeholder="예: 이치란 라멘 2인" autocomplete="off"></div>
+      <div><label class="f">금액 (¥)</label><input name="jpy" inputmode="numeric" placeholder="2200"></div>
+      <div><label class="f">분류</label><select name="cat">${CAT_OPTS.map(c => `<option>${c}</option>`).join('')}</select></div>
+    </div>
+    <div class="acts" style="margin-top:10px"><button class="btn small" type="submit">${isShared ? '공동' : '내'} 지출 추가</button></div>
+  </form>`
+
   if (!rows.length) {
-    el.innerHTML = `<div style="color:var(--muted); font-size:13px">아직 기록한 ${expScope === 'shared' ? '공동' : '개인'} 지출이 없어요.</div>`
-    return
+    html += `<div class="empty">아직 기록한 ${isShared ? '공동' : '개인'} 지출이 없어요.</div>`
+    return html
   }
-  const total = rows.reduce((s, x) => s + x.jpy, 0)
-  const krw = j => Math.round(j * S.rate / 100).toLocaleString()
 
-  let html = `<table class="exp"><thead><tr><th>내역</th>${expScope === 'shared' ? '<th>낸 사람</th>' : '<th>분류</th>'}<th class="r">¥</th><th class="r">원화</th><th></th></tr></thead><tbody>` +
+  html += `<div class="card"><table class="exp"><thead><tr><th>내역</th>${isShared ? '<th>낸 사람</th>' : ''}<th class="r">¥</th><th class="r">원화</th><th></th></tr></thead><tbody>` +
     rows.map(x => `<tr><td>${esc(x.desc)}<div class="exsub">${esc(x.cat)}</div></td>
-      ${expScope === 'shared' ? `<td>${esc(x.by || '—')}</td>` : `<td>${esc(x.cat)}</td>`}
+      ${isShared ? `<td>${esc(x.by || '—')}</td>` : ''}
       <td class="r">${x.jpy.toLocaleString()}</td><td class="r">${krw(x.jpy)}</td>
-      <td class="r"><button class="rm" data-id="${x.id}">✕</button></td></tr>`).join('') +
+      <td class="r"><button class="rm" data-exdel="${x.id}">✕</button></td></tr>`).join('') +
     `</tbody></table>
     <div class="total"><span>합계</span><span>¥${total.toLocaleString()} ≈ ${krw(total)}원</span></div>`
 
-  // 공동 지출은 누가 얼마 냈는지와 1인당 분담액까지 보여준다
-  if (expScope === 'shared') {
-    const people = cloud.active ? cloud.members.map(m => m.name) : []
+  // 공동 지출은 누가 얼마 냈는지와 1인당 분담액까지
+  if (isShared) {
     const paid = {}
     for (const x of rows) if (x.by) paid[x.by] = (paid[x.by] || 0) + x.jpy
-    const names = [...new Set([...people, ...Object.keys(paid)])]
+    const names = [...new Set([...(cloud.active ? cloud.members.map(m => m.name) : []), ...Object.keys(paid)])]
     if (names.length > 1) {
       const share = Math.round(total / names.length)
       html += `<div class="settle"><div class="sh">1인당 <b>¥${share.toLocaleString()}</b> ≈ ${krw(share)}원 <span>(${names.length}명 기준)</span></div>` +
@@ -993,30 +1017,37 @@ function renderExpenses() {
         }).join('') + `</div>`
     }
   }
-  el.innerHTML = html
+  return html + `</div>`
+}
+
+function renderExpenses() {
+  $('expScope').innerHTML = [['shared', '👥 공동 지출'], ['personal', '🙋 내 지출']]
+    .map(([k, t]) => `<button class="${k === expScope ? 'on' : ''}" data-x="${k}">${t}</button>`).join('')
+  renderExpSummary()
+  $('expPanel').innerHTML = expPanelHtml()
 }
 $('expScope').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return
   expScope = b.dataset.x; renderExpenses()
 })
-$('expList').addEventListener('click', e => {
-  const b = e.target.closest('button.rm'); if (!b) return
-  const id = b.dataset.id
+$('expPanel').addEventListener('click', e => {
+  const b = e.target.closest('button[data-exdel]'); if (!b) return
+  const id = b.dataset.exdel
   if (expScope === 'shared') S.expenses = S.expenses.filter(x => x.id !== id)
   else S.myExpenses = S.myExpenses.filter(x => x.id !== id)
   save(); renderExpenses()
 })
-$('expForm').addEventListener('submit', e => {
+$('expPanel').addEventListener('submit', e => {
+  const f = e.target.closest('form[data-expform]'); if (!f) return
   e.preventDefault()
-  const desc = $('ex-desc').value.trim()
-  const jpy = parseFloat($('ex-jpy').value)
+  const desc = f.elements.desc.value.trim()
+  const jpy = parseFloat(f.elements.jpy.value)
   if (!desc || !isFinite(jpy)) return
-  const row = { id: uid(), desc, jpy: Math.round(jpy), cat: $('ex-cat').value }
-  if (expScope === 'shared') {
+  const row = { id: uid(), desc, jpy: Math.round(jpy), cat: f.elements.cat.value }
+  if (f.dataset.expform === 'shared') {
     if (cloud.active) row.by = cloud.me.name
     S.expenses.push(row)
   } else S.myExpenses.push(row)
-  $('ex-desc').value = ''; $('ex-jpy').value = ''
   save(); renderExpenses()
 })
 
@@ -1101,13 +1132,33 @@ async function checkForUpdate({ manual = false } = {}) {
     const latest = await fetchLatestBuild()
     if (latest && latest !== BUILD_ID) {
       updateReady = true
-      showUpdateBar()
+      onNewVersion(manual)
     } else if (manual) {
       toast('이미 최신 버전이에요.')
     }
   } catch (e) {
     if (manual) toast('업데이트 확인에 실패했어요. 연결을 확인해 주세요.')
   }
+}
+
+/* 새 버전을 찾으면 알아서 새로고침한다.
+   다만 뭔가 입력하는 중이면 날아가니, 그때는 버튼만 띄우고 사용자가 고르게 한다. */
+const RELOAD_KEY = 'fukuoka-auto-reload'
+const reloadCount = () => { try { return Number(sessionStorage.getItem(RELOAD_KEY) || 0) } catch (e) { return 99 } }
+const bumpReload = () => { try { sessionStorage.setItem(RELOAD_KEY, String(reloadCount() + 1)) } catch (e) { /* ignore */ } }
+
+function isBusy() {
+  if (document.querySelector('dialog[open]')) return true
+  const el = document.activeElement
+  return Boolean(el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) && el.value)
+}
+
+function onNewVersion(manual) {
+  // 배포 직후 CDN이 엇갈려 계속 새 버전으로 보일 수 있으니 한 세션에 두 번까지만 자동 새로고침
+  if (!manual && (isBusy() || reloadCount() >= 2)) { showUpdateBar(); return }
+  bumpReload()
+  toast('새 버전을 불러옵니다…')
+  setTimeout(applyUpdate, 500)
 }
 
 function showUpdateBar() {

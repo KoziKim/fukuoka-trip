@@ -46,6 +46,7 @@
 <nav class="tabs" id="tabs">
   <button data-tab="food" class="on">맛집</button>
   <button data-tab="plan">일정</button>
+  <button data-tab="exp">경비</button>
   <button data-tab="more">메뉴</button>
 </nav>
 
@@ -67,7 +68,7 @@
     </button>
     <button data-open="prep">
       <span class="mi">🧳</span>
-      <span class="mt"><b>여행 준비</b><small>준비물 체크리스트, 환율·경비, 백업</small></span>
+      <span class="mt"><b>여행 준비</b><small>준비물 체크리스트, 데이터 백업</small></span>
       <span class="ma">›</span>
     </button>
   </div>
@@ -117,6 +118,22 @@
   <div class="daytabs" id="dayTabs"></div>
   <div id="dayView"></div>
   <div id="nearbyWrap"></div>
+</section>
+
+<!-- ══════════ 경비 ══════════ -->
+<section class="pane" id="pane-exp">
+  <h2>경비</h2>
+  <div id="expSummary"></div>
+  <div class="card" style="margin-bottom:14px">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+      <input id="fx-jpy" inputmode="numeric" placeholder="엔(¥)" style="width:110px">
+      <span>=</span>
+      <b id="fx-krw" style="font-variant-numeric:tabular-nums">0원</b>
+      <span style="margin-left:auto; font-size:12.5px; color:var(--muted)">100엔 = <input id="fx-rate" inputmode="decimal" style="width:64px; padding:3px 6px">원</span>
+    </div>
+  </div>
+  <div class="segs" id="expScope"></div>
+  <div id="expPanel"></div>
 </section>
 
 <!-- ══════════ 숙소·이동 ══════════ -->
@@ -170,29 +187,6 @@
     <input id="ck-text" placeholder="준비물 추가" style="flex:1">
     <button class="btn small" type="submit">추가</button>
   </form>
-
-  <h3>환율 계산기 · 경비 기록</h3>
-  <div class="card">
-    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
-      <input id="fx-jpy" inputmode="numeric" placeholder="엔(¥)" style="width:110px">
-      <span>=</span>
-      <b id="fx-krw" style="font-variant-numeric:tabular-nums">0원</b>
-      <span style="margin-left:auto; font-size:12.5px; color:var(--muted)">100엔 = <input id="fx-rate" inputmode="decimal" style="width:64px; padding:3px 6px">원</span>
-    </div>
-  </div>
-  <div class="sortrow" id="expScope"></div>
-  <p class="hint" id="expScopeHint" style="margin:-6px 0 10px"></p>
-  <form class="editor" id="expForm">
-    <div class="grid">
-      <div class="full"><label class="f" for="ex-desc">내역</label><input id="ex-desc" placeholder="예: 이치란 라멘 2인"></div>
-      <div><label class="f" for="ex-jpy">금액 (¥)</label><input id="ex-jpy" inputmode="numeric" placeholder="2200"></div>
-      <div><label class="f" for="ex-cat">분류</label><select id="ex-cat">
-        <option>식비</option><option>교통</option><option>쇼핑</option><option>숙박</option><option>입장료</option><option>기타</option>
-      </select></div>
-    </div>
-    <div class="acts" style="margin-top:10px"><button class="btn small" type="submit">지출 추가</button></div>
-  </form>
-  <div class="card" id="expList"></div>
 
   <h3>데이터 백업</h3>
   <p class="desc">데이터는 이 브라우저에만 저장돼요. 다른 기기로 옮기거나 동행자와 공유하려면 내보내기 → 가져오기를 사용하세요.</p>
