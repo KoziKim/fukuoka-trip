@@ -4,7 +4,7 @@ import { hav, routes, routeChips, bestSummary } from './transit.js'
 import {
   cloud, initCloud, resumeTrip, createTrip, joinTrip, clearSession, fetchAll, pushState,
   addItem, updateItem, removeItem, addComment, removeComment,
-  pushSupported, pushStatus, enablePush, disablePush, isStandalone,
+  pushSupported, pushStatus, enablePush, disablePush, isStandalone, stateWriteInfo,
 } from './cloud.js'
 
 /* ───────── 저장소 ───────── */
@@ -34,7 +34,10 @@ function sharedState() {
   for (const k of SHARED_KEYS) o[k] = k === 'dayCount' ? S.days.length : S[k]
   return o
 }
+/* 마지막으로 이 기기에서 저장한 시각. 진행 중이던 서버 응답이 이 값을 덮지 않게 하는 데 쓴다 */
+let localEditAt = 0
 function save() {
+  localEditAt = Date.now()
   try { localStorage.setItem(KEY, JSON.stringify(S)) } catch (e) { /* ignore */ }
   if (cloud.active) pushState(sharedState())
 }
@@ -246,6 +249,11 @@ foodEditor.addEventListener('submit', e => {
 })
 
 /* ───────── 숙소·이동 탭 ───────── */
+/* 폼에 저장하지 않은 변경이 있는지. 동기화가 이 값을 덮어쓰지 못하게 한다 */
+let hotelFormDirty = false
+$('hotelForm').addEventListener('input', () => { hotelFormDirty = true })
+$('hotelForm').addEventListener('change', () => { hotelFormDirty = true })
+
 function renderHotelForm() {
   let html = `<option value="">— 숙소 선택 —</option>`
   let group = null
@@ -259,7 +267,10 @@ function renderHotelForm() {
   })
   if (group !== null) html += `</optgroup>`
   $('ht-preset').innerHTML = html
-  if (S.hotel) {
+  // 사용자가 고쳐둔 값이 있으면 건드리지 않는다.
+  // 동기화가 끼어들면 고르던 숙소가 저장 전에 예전 값으로 되돌아가, 저장을 눌러도
+  // 예전 숙소가 다시 저장되던 문제가 있었다.
+  if (S.hotel && !hotelFormDirty) {
     $('ht-name').value = S.hotel.name || ''
     $('ht-lat').value = S.hotel.lat ?? ''
     $('ht-lng').value = S.hotel.lng ?? ''
@@ -285,7 +296,10 @@ $('hotelForm').addEventListener('submit', e => {
   const lat = parseFloat($('ht-lat').value), lng = parseFloat($('ht-lng').value)
   if (!isFinite(lat) || !isFinite(lng)) { alert('위치(지역 선택 또는 좌표)를 입력해 주세요.'); return }
   S.hotel = { name: $('ht-name').value.trim(), lat, lng }
+  hotelFormDirty = false
   save(); renderHotel(); renderFoods(); refreshPickOptions(); renderDays()
+  document.activeElement?.blur?.()
+  toast(`🏨 ${S.hotel.name || '숙소'} 저장했어요`)
 })
 function renderHotel() {
   const el = $('hotelResult')
@@ -639,12 +653,22 @@ const toLocalItem = r => ({
 
 async function refreshCloud() {
   if (!cloud.active) return
+  const startedAt = Date.now()
   try {
     const data = await fetchAll()
     if (!data) return
-    for (const k of SHARED_KEYS) {
-      if (k === 'dayCount') continue
-      if (data.state[k] !== undefined) S[k] = data.state[k]
+    // 서버의 옛 값이 방금 저장한 내 값을 덮어쓰지 않게 한다. (저장이 한 번에 안 먹던 원인)
+    // 셋 중 하나라도 해당하면 이 응답은 내 변경보다 오래된 것이다.
+    //  - 아직 못 올린 변경이 남아 있다
+    //  - 요청이 오가는 사이에 내가 저장했다
+    //  - 내 변경이 서버에 기록되기 전에 시작된 읽기다
+    const w = stateWriteInfo()
+    const mineIsNewer = w.pending || localEditAt > startedAt || startedAt < w.lastWriteAt
+    if (!mineIsNewer) {
+      for (const k of SHARED_KEYS) {
+        if (k === 'dayCount') continue
+        if (data.state[k] !== undefined) S[k] = data.state[k]
+      }
     }
     const dayCount = Math.max(1, data.state.dayCount || 1, ...data.items.map(i => i.day + 1))
     S.days = Array.from({ length: dayCount }, (_, d) => ({

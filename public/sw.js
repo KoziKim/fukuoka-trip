@@ -5,7 +5,10 @@
 //    (예전처럼 캐시를 먼저 주면 홈 화면에 추가한 앱이 계속 옛 화면을 보여준다.)
 //  · /assets/*: 파일명에 내용 해시가 붙어 있어 내용이 절대 안 바뀌므로 캐시 우선.
 //  · 그 외(아이콘·매니페스트): 캐시를 주고 뒤에서 갱신.
-const CACHE = 'fukuoka-note-v2'
+const CACHE = 'fukuoka-note-v3'
+
+// 우리 사이트가 아닌 곳 중 캐시해도 되는 것 (폰트뿐). 나머지 외부 요청은 손대지 않는다.
+const CACHEABLE_HOSTS = /(^|\.)jsdelivr\.net$|(^|\.)googleapis\.com$|(^|\.)gstatic\.com$/
 
 self.addEventListener('install', () => self.skipWaiting())
 
@@ -23,6 +26,22 @@ self.addEventListener('fetch', e => {
 
   const url = new URL(req.url)
   const sameOrigin = url.origin === self.location.origin
+
+  // 외부 요청은 폰트만 캐시하고 나머지는 건드리지 않는다.
+  // 특히 Supabase API 응답을 캐시하면, 저장한 뒤 다시 읽을 때 옛 값이 돌아와
+  // 방금 한 변경이 되돌아간 것처럼 보인다.
+  if (!sameOrigin) {
+    if (!CACHEABLE_HOSTS.test(url.hostname)) return
+    e.respondWith((async () => {
+      const cache = await caches.open(CACHE)
+      const hit = await cache.match(req)
+      if (hit) return hit
+      const res = await fetch(req)
+      if (res && (res.ok || res.type === 'opaque')) cache.put(req, res.clone())
+      return res
+    })())
+    return
+  }
 
   // 버전 확인 파일은 절대 캐시하지 않는다. 캐시하면 새 버전을 영영 못 알아챈다.
   if (sameOrigin && url.pathname.endsWith('/version.json')) {

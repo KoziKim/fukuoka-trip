@@ -119,7 +119,13 @@ export async function fetchAll() {
 /* ─────────── 쓰기 ─────────── */
 
 /** 숙소·즐겨찾기·꿀팁·체크리스트 등 공유 상태. 잦은 저장을 묶어 보낸다 */
-let stateTimer = null, pendingState = null
+let stateTimer = null, pendingState = null, lastStateWriteAt = 0
+/**
+ * 서버로 올려보내는 상태의 진행 상황.
+ *  pending     아직 안 올라간 변경이 있다
+ *  lastWriteAt 마지막으로 올린 시각. 이보다 먼저 시작된 읽기는 내 변경 이전의 값이다.
+ */
+export const stateWriteInfo = () => ({ pending: pendingState !== null, lastWriteAt: lastStateWriteAt })
 export function pushState(state) {
   if (!cloud.active) return
   pendingState = state
@@ -130,6 +136,7 @@ export function pushState(state) {
       .update({ state: body, updated_at: new Date().toISOString() })
       .eq('id', cloud.trip.id)
     if (error) cloud.error = error.message
+    else lastStateWriteAt = Date.now()
   }, 700)
 }
 
