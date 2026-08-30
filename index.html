@@ -82,7 +82,11 @@
   <form class="editor" id="hotelForm" style="margin-top:0">
     <div class="grid">
       <div class="full"><label class="f" for="ht-name">숙소 이름</label><input id="ht-name" placeholder="예: 호텔 닛코 후쿠오카"></div>
-      <div class="full"><label class="f" for="ht-preset">위치 (지역 선택 또는 아래에 좌표 직접 입력)</label><select id="ht-preset"></select></div>
+      <div class="full">
+        <label class="f" for="ht-preset">숙소 선택 (또는 아래에 좌표 직접 입력)</label>
+        <select id="ht-preset"></select>
+        <p class="hint" id="ht-note"></p>
+      </div>
       <div><label class="f" for="ht-lat">위도</label><input id="ht-lat" inputmode="decimal" placeholder="33.5897"></div>
       <div><label class="f" for="ht-lng">경도</label><input id="ht-lng" inputmode="decimal" placeholder="130.4207"></div>
     </div>

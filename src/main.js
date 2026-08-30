@@ -153,17 +153,38 @@ foodEditor.addEventListener('submit', e => {
 
 /* ───────── 숙소·이동 탭 ───────── */
 function renderHotelForm() {
-  $('ht-preset').innerHTML = `<option value="">— 지역 선택 —</option>` + HOTEL_PRESETS.map((p, i) => `<option value="${i}">${esc(p.name)}</option>`).join('')
+  let html = `<option value="">— 숙소 선택 —</option>`
+  let group = null
+  HOTEL_PRESETS.forEach((p, i) => {
+    if (p.group !== group) {
+      if (group !== null) html += `</optgroup>`
+      html += `<optgroup label="${esc(p.group)}">`
+      group = p.group
+    }
+    html += `<option value="${i}">${esc(p.name)}</option>`
+  })
+  if (group !== null) html += `</optgroup>`
+  $('ht-preset').innerHTML = html
   if (S.hotel) {
     $('ht-name').value = S.hotel.name || ''
     $('ht-lat').value = S.hotel.lat ?? ''
     $('ht-lng').value = S.hotel.lng ?? ''
+    const i = HOTEL_PRESETS.findIndex(p => p.hotelName && p.hotelName === S.hotel.name)
+    if (i >= 0) $('ht-preset').value = String(i)
   }
+  showPresetNote()
+}
+function showPresetNote() {
+  const p = HOTEL_PRESETS[$('ht-preset').value]
+  $('ht-note').textContent = p && p.note ? p.note : ''
 }
 $('ht-preset').addEventListener('change', e => {
-  const p = HOTEL_PRESETS[e.target.value]; if (!p) return
+  const p = HOTEL_PRESETS[e.target.value]
+  showPresetNote()
+  if (!p) return
   $('ht-lat').value = p.lat
   $('ht-lng').value = p.lng
+  if (p.hotelName) $('ht-name').value = p.hotelName
 })
 $('hotelForm').addEventListener('submit', e => {
   e.preventDefault()
