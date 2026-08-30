@@ -953,7 +953,31 @@ if (cloud.configured) {
     .finally(renderShare)
 }
 
-/* PWA: 오프라인 캐시 */
+/* PWA: 오프라인 캐시 + 새 버전 자동 반영 */
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => { /* 미지원 환경 무시 */ })
+  // 페이지를 열 때 이미 서비스워커가 있었는지 기억해 둔다.
+  // 첫 설치 때도 controllerchange가 한 번 도는데, 그때까지 새로고침하면 헛도는 느낌이 난다.
+  const hadController = Boolean(navigator.serviceWorker.controller)
+  let reloading = false
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloading) return
+    reloading = true
+    location.reload()
+  })
+
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+    reg.update().catch(() => { /* 오프라인 */ })
+    // 홈 화면 앱은 오래 떠 있으니, 다시 볼 때마다 새 버전이 있는지 확인한다
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) reg.update().catch(() => { /* 오프라인 */ })
+    })
+    // 새 버전이 대기 중이면 바로 넘긴다
+    reg.addEventListener('updatefound', () => {
+      const sw = reg.installing
+      if (!sw) return
+      sw.addEventListener('statechange', () => {
+        if (sw.state === 'installed' && navigator.serviceWorker.controller) sw.postMessage('skipWaiting')
+      })
+    })
+  }).catch(() => { /* 미지원 환경 무시 */ })
 }
