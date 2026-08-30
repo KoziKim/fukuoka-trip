@@ -5,7 +5,7 @@ import {
   cloud, initCloud, resumeTrip, createTrip, joinTrip, clearSession, fetchAll, pushState,
   addItem, updateItem, removeItem, addComment, removeComment,
   pushSupported, pushStatus, enablePush, disablePush, isStandalone, stateWriteInfo,
-  listTrips, switchTrip, renameTrip, duplicateTrip,
+  listTrips, switchTrip, renameTrip, duplicateTrip, leaveTrip, removeMember,
 } from './cloud.js'
 
 /* ───────── 저장소 ───────── */
@@ -832,7 +832,6 @@ async function renderShare() {
     return
   }
   const st = await pushStatus()
-  const names = cloud.members.map(m => m.name).join(', ')
   const pushUI = {
     unconfigured: `<span class="chip">🔔 알림 준비 중 — 서버 설정이 끝나면 켤 수 있어요</span>`,
     'no-backend': `<span class="chip">🔔 알림 서버 배포 전 — 지금은 앱을 열어둔 동안만 알려드려요</span>`,
@@ -854,7 +853,13 @@ async function renderShare() {
     <div class="acts" style="margin-top:8px">
       <button class="btn small" data-share="invite">🔗 초대링크 보내기</button>
     </div>
-    <p class="pdesc">참여자 ${cloud.members.length}명 · ${esc(names)}<br>나: <b>${esc(cloud.me.name)}</b></p>
+    <div class="memlist">
+      <div class="mh">참여자 ${cloud.members.length}명</div>
+      ${cloud.members.map(m => `<div class="mrow">
+        <span class="mn">${esc(m.name)}${m.id === cloud.me.memberId ? ' <span class="cat mine">나</span>' : ''}</span>
+        ${m.id === cloud.me.memberId ? '' : `<button class="mx" data-kick="${m.id}" aria-label="${esc(m.name)} 내보내기">✕</button>`}
+      </div>`).join('')}
+    </div>
     ${cloud.error ? `<p class="pdesc" style="color:var(--bad)">${esc(cloud.error)}</p>` : ''}
     <div class="acts">
       ${pushUI}
@@ -865,6 +870,15 @@ async function renderShare() {
 }
 
 $('shareBox').addEventListener('click', async e => {
+  const kick = e.target.closest('button[data-kick]')
+  if (kick) {
+    const m = cloud.members.find(x => x.id === kick.dataset.kick)
+    if (!m) return
+    if (!confirm(`'${m.name}' 님을 참여자 명단에서 뺄까요?\n초대코드를 알면 다시 들어올 수 있어요.`)) return
+    try { await removeMember(m.id); await refreshCloud(); await renderShare() }
+    catch (err) { alert(err.message || String(err)) }
+    return
+  }
   const b = e.target.closest('button[data-share]'); if (!b) return
   const act = b.dataset.share
   try {
@@ -902,8 +916,19 @@ $('shareBox').addEventListener('click', async e => {
     if (act === 'pushon') { b.disabled = true; await enablePush() }
     if (act === 'pushoff') { b.disabled = true; await disablePush() }
     if (act === 'leave') {
-      if (!confirm('이 여행에서 나갈까요? 기기에 남은 데이터는 그대로예요.')) return
-      clearSession()
+      if (!confirm(`'${cloud.trip.name || '이 여행'}'에서 나갈까요?\n참여자 명단에서 빠지고, 이 여행의 일정은 더 이상 보이지 않아요.\n초대코드를 알면 다시 들어올 수 있습니다.`)) return
+      await leaveTrip()
+      resetSharedLocal()
+      await refreshTripList()
+      // 다른 여행이 남아 있으면 그리로 옮겨준다
+      if (myTrips.length) {
+        switchTrip(myTrips[0])
+        await refreshCloud()
+      } else {
+        renderAll()
+      }
+      renderTripBar()
+      toast('여행에서 나왔어요')
     }
   } catch (err) {
     alert(err.message || String(err))
@@ -931,7 +956,8 @@ function uniqueTripName(base, exceptTripId) {
 }
 
 async function refreshTripList() {
-  if (!cloud.active) { myTrips = []; renderTripBar(); return }
+  // 여행에서 나온 직후에도 남은 여행을 찾아야 하므로 active 가 아니어도 조회한다
+  if (!cloud.configured) { myTrips = []; renderTripBar(); return }
   try { myTrips = await listTrips() } catch (e) { myTrips = [] }
   renderTripBar()
 }

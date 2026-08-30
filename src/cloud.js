@@ -36,6 +36,20 @@ function saveSession() {
 function loadSession() {
   try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null') } catch (e) { return null }
 }
+/** 여행에서 실제로 빠진다. members 행을 지워야 참여자 명단에서도 사라진다 */
+export async function leaveTrip() {
+  if (!cloud.active) return
+  const { error } = await sb.from('members').delete().eq('id', cloud.me.memberId)
+  if (error) throw error
+  clearSession()
+}
+
+/** 잘못 들어온 사람을 명단에서 뺀다 (같은 여행 멤버끼리 가능) */
+export async function removeMember(memberId) {
+  const { error } = await sb.from('members').delete().eq('id', memberId)
+  if (error) throw error
+}
+
 export function clearSession() {
   try { localStorage.removeItem(SESSION_KEY) } catch (e) { /* ignore */ }
   cloud.active = false; cloud.trip = null; cloud.me = null; cloud.members = []
