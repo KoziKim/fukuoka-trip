@@ -1,0 +1,13 @@
+{
+  "name": "후쿠오카 수첩",
+  "short_name": "후쿠오카수첩",
+  "description": "후쿠오카 여행 맛집·일정·이동시간·꿀팁·준비물 정리",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#F7F5F0",
+  "theme_color": "#2F4E7E",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

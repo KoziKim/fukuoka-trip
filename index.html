@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<script>
+  // 저장된 선택이 '다크'일 때만 다크 — 기본은 라이트 (첫 페인트 전에 적용해 깜빡임 방지)
+  try {
+    if (localStorage.getItem('fukuoka-theme') === 'dark') document.documentElement.dataset.theme = 'dark'
+  } catch (e) { /* 프라이빗 모드 등 */ }
+</script>
+<meta name="theme-color" content="#2F4E7E">
+<meta name="description" content="후쿠오카 여행 맛집·일정·이동시간·꿀팁·준비물을 한 곳에서 정리하는 여행 플래너">
+<title>후쿠오카 수첩</title>
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <script type="module" crossorigin src="./assets/index-DJN2JuEG.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-B5n1u3SU.css">
+</head>
+<body>
+
+<div class="wrap">
+<header class="top">
+  <div class="titles">
+    <div class="brand">후쿠오카 수첩<span class="hanja">福岡</span><span id="dday" class="dday" hidden></span></div>
+    <div class="sub">맛집 · 동선 · 일정 · 꿀팁을 한 곳에</div>
+  </div>
+  <button id="themeBtn" type="button" aria-label="다크 모드 켜기">🌙</button>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="food" class="on">맛집</button>
+  <button data-tab="plan">일정</button>
+  <button data-tab="move">숙소·이동</button>
+  <button data-tab="tips">꿀팁</button>
+  <button data-tab="prep">준비</button>
+</nav>
+
+<!-- ══════════ 맛집 ══════════ -->
+<section class="pane on" id="pane-food">
+  <h2>맛집 리스트</h2>
+  <p class="desc">기본으로 담아둔 인기 맛집에 내 맛집을 추가하세요. 숙소를 설정하면 각 맛집까지 걸리는 시간이 표시됩니다.</p>
+  <div class="filters" id="foodFilters"></div>
+  <div id="foodList"></div>
+  <button class="btn" id="addFoodBtn">+ 맛집 추가</button>
+  <form class="editor" id="foodEditor" hidden>
+    <input type="hidden" id="fe-id">
+    <div class="grid">
+      <div><label class="f" for="fe-name">이름 *</label><input id="fe-name" required placeholder="예: 우오베이 스시"></div>
+      <div><label class="f" for="fe-cat">분류</label><select id="fe-cat"></select></div>
+      <div><label class="f" for="fe-area">지역</label><input id="fe-area" placeholder="예: 하카타"></div>
+      <div><label class="f" for="fe-price">가격대</label><input id="fe-price" placeholder="예: ¥1,000~"></div>
+      <div><label class="f" for="fe-lat">위도 (선택)</label><input id="fe-lat" inputmode="decimal" placeholder="33.5897"></div>
+      <div><label class="f" for="fe-lng">경도 (선택)</label><input id="fe-lng" inputmode="decimal" placeholder="130.4207"></div>
+      <div class="full"><label class="f" for="fe-desc">메모</label><input id="fe-desc" placeholder="대표 메뉴, 웨이팅 팁 등"></div>
+    </div>
+    <p class="hint">좌표를 넣으면 이동시간이 계산돼요. 구글맵에서 장소를 길게 누르면 좌표가 표시됩니다.</p>
+    <div class="acts" style="margin-top:10px">
+      <button class="btn small" type="submit">저장</button>
+      <button class="btn small ghost" type="button" id="fe-cancel">취소</button>
+    </div>
+  </form>
+</section>
+
+<!-- ══════════ 일정 ══════════ -->
+<section class="pane" id="pane-plan">
+  <h2>여행 계획표</h2>
+  <p class="desc">시간대별로 장소를 넣으면 앞뒤 장소 사이 이동시간이 자동 계산됩니다.</p>
+  <div class="card" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+    <label class="f" for="tripStart" style="margin:0">여행 시작일</label>
+    <input type="date" id="tripStart" style="width:auto">
+    <button class="btn small ghost" id="addDayBtn">+ 일차 추가</button>
+  </div>
+  <div class="daytabs" id="dayTabs"></div>
+  <div id="dayView"></div>
+</section>
+
+<!-- ══════════ 숙소·이동 ══════════ -->
+<section class="pane" id="pane-move">
+  <h2>숙소 · 이동시간</h2>
+  <p class="desc">숙소를 설정하면 공항과 주요 장소까지 예상 소요시간을 계산합니다. 지하철은 공항선·하코자키선·나나쿠마선 노선도 기준의 추정치예요.</p>
+  <form class="editor" id="hotelForm" style="margin-top:0">
+    <div class="grid">
+      <div class="full"><label class="f" for="ht-name">숙소 이름</label><input id="ht-name" placeholder="예: 호텔 닛코 후쿠오카"></div>
+      <div class="full"><label class="f" for="ht-preset">위치 (지역 선택 또는 아래에 좌표 직접 입력)</label><select id="ht-preset"></select></div>
+      <div><label class="f" for="ht-lat">위도</label><input id="ht-lat" inputmode="decimal" placeholder="33.5897"></div>
+      <div><label class="f" for="ht-lng">경도</label><input id="ht-lng" inputmode="decimal" placeholder="130.4207"></div>
+    </div>
+    <p class="hint">정확한 계산을 원하면 구글맵에서 숙소를 길게 눌러 좌표를 복사해 넣으세요.</p>
+    <div class="acts" style="margin-top:10px"><button class="btn small" type="submit">숙소 저장</button></div>
+  </form>
+  <div id="hotelResult"></div>
+</section>
+
+<!-- ══════════ 꿀팁 ══════════ -->
+<section class="pane" id="pane-tips">
+  <h2>여행 꿀팁</h2>
+  <p class="desc">인터넷에 흩어진 후쿠오카 정보를 모아뒀어요. 내 팁도 추가할 수 있습니다.</p>
+  <div id="tipList"></div>
+  <form class="editor" id="tipForm">
+    <div class="grid">
+      <div><label class="f" for="tp-cat">분류</label><select id="tp-cat"></select></div>
+      <div class="full"><label class="f" for="tp-text">내 꿀팁</label><input id="tp-text" placeholder="예: ○○ 가게는 화요일 휴무"></div>
+    </div>
+    <div class="acts" style="margin-top:10px"><button class="btn small" type="submit">팁 추가</button></div>
+  </form>
+  <div class="srcs" id="tipSrcs"></div>
+</section>
+
+<!-- ══════════ 준비 ══════════ -->
+<section class="pane" id="pane-prep">
+  <h2>여행 준비</h2>
+
+  <h3>준비물 체크리스트</h3>
+  <div class="card" id="checkList"></div>
+  <form id="checkForm" style="display:flex; gap:8px; margin-bottom:24px">
+    <input id="ck-text" placeholder="준비물 추가" style="flex:1">
+    <button class="btn small" type="submit">추가</button>
+  </form>
+
+  <h3>환율 계산기 · 경비 기록</h3>
+  <div class="card">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+      <input id="fx-jpy" inputmode="numeric" placeholder="엔(¥)" style="width:110px">
+      <span>=</span>
+      <b id="fx-krw" style="font-variant-numeric:tabular-nums">0원</b>
+      <span style="margin-left:auto; font-size:12.5px; color:var(--muted)">100엔 = <input id="fx-rate" inputmode="decimal" style="width:64px; padding:3px 6px">원</span>
+    </div>
+  </div>
+  <form class="editor" id="expForm">
+    <div class="grid">
+      <div class="full"><label class="f" for="ex-desc">내역</label><input id="ex-desc" placeholder="예: 이치란 라멘 2인"></div>
+      <div><label class="f" for="ex-jpy">금액 (¥)</label><input id="ex-jpy" inputmode="numeric" placeholder="2200"></div>
+      <div><label class="f" for="ex-cat">분류</label><select id="ex-cat">
+        <option>식비</option><option>교통</option><option>쇼핑</option><option>숙박</option><option>입장료</option><option>기타</option>
+      </select></div>
+    </div>
+    <div class="acts" style="margin-top:10px"><button class="btn small" type="submit">지출 추가</button></div>
+  </form>
+  <div class="card" id="expList"></div>
+
+  <h3>데이터 백업</h3>
+  <p class="desc">데이터는 이 브라우저에만 저장돼요. 다른 기기로 옮기거나 동행자와 공유하려면 내보내기 → 가져오기를 사용하세요.</p>
+  <div class="acts">
+    <button class="btn small ghost" id="exportBtn">내보내기</button>
+    <button class="btn small ghost" id="importBtn">가져오기</button>
+    <button class="btn small danger" id="resetBtn">전체 초기화</button>
+  </div>
+</section>
+
+<footer>이동시간은 직선거리·노선도 기반 추정치입니다. 실제 시간은 구글맵으로 확인하세요. · 후쿠오카 수첩</footer>
+</div>
+
+<dialog id="ioDialog">
+  <h3 style="margin-top:0" id="ioTitle">데이터 내보내기</h3>
+  <p class="hint" id="ioHint"></p>
+  <textarea id="ioText" rows="8" style="font-size:12px; font-family:monospace"></textarea>
+  <div class="acts" style="margin-top:10px">
+    <button class="btn small" id="ioAction">복사</button>
+    <button class="btn small ghost" id="ioClose">닫기</button>
+  </div>
+</dialog>
+
+<dialog id="pickDialog">
+  <h3 style="margin-top:0">일정에 장소 추가</h3>
+  <div class="grid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
+    <div><label class="f" for="pk-time">시간</label><input type="time" id="pk-time" value="10:00"></div>
+    <div><label class="f" for="pk-place">장소</label><select id="pk-place"></select></div>
+    <div class="full" id="pk-customWrap" hidden style="grid-column:1/-1"><label class="f" for="pk-custom">직접 입력</label><input id="pk-custom" placeholder="장소 이름"></div>
+    <div class="full" style="grid-column:1/-1"><label class="f" for="pk-memo">메모</label><input id="pk-memo" placeholder="예: 오픈런 10:30 도착"></div>
+  </div>
+  <div class="acts" style="margin-top:12px">
+    <button class="btn small" id="pk-save">추가</button>
+    <button class="btn small ghost" id="pk-close">닫기</button>
+  </div>
+</dialog>
+
+</body>
+</html>
