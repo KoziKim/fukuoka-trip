@@ -11,14 +11,14 @@
   } catch (e) { /* 프라이빗 모드 등 */ }
 </script>
 <meta name="theme-color" content="#2F4E7E">
-<meta name="description" content="맛집 53곳 AI 별점, 숙소 기준 이동시간, 일정별 코멘트까지. 초대코드만 넣으면 친구들과 같은 일정을 봅니다.">
+<meta name="description" content="맛집 53곳 AI 별점 · 숙소 기준 이동시간 · 일정별 코멘트. 초대코드만 넣으면 친구들과 같은 일정을 봅니다. 공유 버튼 → 홈 화면에 추가하면 앱처럼 쓸 수 있어요.">
 <link rel="canonical" href="https://kozikim.github.io/fukuoka-trip/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="후쿠오카 수첩">
 <meta property="og:locale" content="ko_KR">
 <meta property="og:url" content="https://kozikim.github.io/fukuoka-trip/">
 <meta property="og:title" content="후쿠오카 수첩 — 같이 짜는 여행 일정">
-<meta property="og:description" content="맛집 53곳 AI 별점, 숙소 기준 이동시간, 일정별 코멘트까지. 초대코드만 넣으면 친구들과 같은 일정을 봅니다.">
+<meta property="og:description" content="맛집 53곳 AI 별점 · 숙소 기준 이동시간 · 일정별 코멘트. 초대코드만 넣으면 친구들과 같은 일정을 봅니다. 공유 버튼 → 홈 화면에 추가하면 앱처럼 쓸 수 있어요.">
 <meta property="og:image" content="https://kozikim.github.io/fukuoka-trip/og.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
@@ -71,6 +71,11 @@
       <span class="mt"><b>여행 준비</b><small>준비물 체크리스트, 데이터 백업</small></span>
       <span class="ma">›</span>
     </button>
+    <button data-open="install">
+      <span class="mi">📲</span>
+      <span class="mt"><b>홈 화면에 설치</b><small>앱처럼 쓰고 알림도 받기</small></span>
+      <span class="ma">›</span>
+    </button>
   </div>
   <div class="verrow">
     <span id="verText">버전 확인 중…</span>
@@ -118,6 +123,14 @@
   <div class="daytabs" id="dayTabs"></div>
   <div id="dayView"></div>
   <div id="nearbyWrap"></div>
+</section>
+
+<!-- ══════════ 홈 화면 설치 ══════════ -->
+<section class="pane" id="pane-install">
+  <button class="backbar" data-back>← 메뉴</button>
+  <h2>홈 화면에 설치</h2>
+  <p class="desc">홈 화면에 추가하면 앱처럼 전체 화면으로 열리고, 비행기 모드·지하철에서도 열립니다. 코멘트 알림도 설치해야 받을 수 있어요.</p>
+  <div id="installBox"></div>
 </section>
 
 <!-- ══════════ 경비 ══════════ -->

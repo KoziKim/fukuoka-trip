@@ -96,6 +96,9 @@ export function bestSummary(r) {
   if (!r) return null
   if (r.air) return `✈️ 항공 약 ${Math.floor(r.flightMin / 60)}시간 ${r.flightMin % 60}분 (수속·대기 별도)`
   if (r.far) return `광역 이동 (직선 ${r.dKm.toFixed(1)}km)`
-  if (r.walk <= 15 || !r.metro) return `🚶 도보 약 ${r.walk}분`
-  return `🚇 지하철 약 ${r.metro.min}분 (${r.metro.from}→${r.metro.to})`
+  if (r.walk <= 15) return `🚶 도보 약 ${r.walk}분`
+  if (r.metro) return `🚇 약 ${r.metro.min}분 (${r.metro.from}→${r.metro.to})`
+  // 전철이 닿지 않는데 걸어서 한참이면 택시를 안내한다. 두 시간 걷기를 권할 수는 없다.
+  if (r.walk > 40) return `🚕 택시 약 ${r.taxi.min}분 (약 ¥${r.taxi.fare.toLocaleString()})`
+  return `🚶 도보 약 ${r.walk}분`
 }

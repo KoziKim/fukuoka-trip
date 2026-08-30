@@ -4,7 +4,7 @@ import { hav, routes, routeChips, bestSummary } from './transit.js'
 import {
   cloud, initCloud, resumeTrip, createTrip, joinTrip, clearSession, fetchAll, pushState,
   addItem, updateItem, removeItem, addComment, removeComment,
-  pushSupported, pushStatus, enablePush, disablePush,
+  pushSupported, pushStatus, enablePush, disablePush, isStandalone,
 } from './cloud.js'
 
 /* ───────── 저장소 ───────── */
@@ -46,7 +46,15 @@ const $ = id => document.getElementById(id)
 function allFoods() { return PRESET_FOODS.filter(f => !S.hiddenFoods.includes(f.id)).concat(S.customFoods) }
 function allPlaces() {
   const places = [{ ...ICN, kind: '공항' }, { ...AIRPORT, kind: '공항' }]
-  if (S.hotel && S.hotel.lat) places.push({ id: 'hotel', name: '🏨 ' + (S.hotel.name || '우리 숙소'), lat: S.hotel.lat, lng: S.hotel.lng, kind: '숙소' })
+  // 확정 숙소 두 곳은 일정에 바로 넣을 수 있게 장소로도 제공한다 (묵는 날이 나뉘므로)
+  const stays = HOTEL_PRESETS.filter(h => h.hotelName)
+  for (const h of stays) {
+    places.push({ id: h.id, name: '🏨 ' + h.hotelName, area: h.area, lat: h.lat, lng: h.lng, kind: '숙소' })
+  }
+  // 직접 입력한 숙소가 프리셋과 다를 때만 따로 넣는다
+  if (S.hotel && S.hotel.lat && !stays.some(h => h.hotelName === S.hotel.name)) {
+    places.push({ id: 'hotel', name: '🏨 ' + (S.hotel.name || '우리 숙소'), lat: S.hotel.lat, lng: S.hotel.lng, kind: '숙소' })
+  }
   for (const f of allFoods()) places.push({ ...f, kind: '맛집' })
   for (const s of PRESET_SPOTS) places.push({ ...s, kind: '명소' })
   return places
@@ -763,7 +771,7 @@ $('shareBox').addEventListener('click', async e => {
     }
     if (act === 'invite') {
       const url = inviteUrl()
-      const text = `${cloud.trip.name || '후쿠오카 여행'} 일정 같이 짜자!\n아래 링크로 들어오면 바로 참가돼 (초대코드 ${cloud.trip.code})`
+      const text = `${cloud.trip.name || '후쿠오카 여행'} 일정 같이 짜자!\n링크 열면 바로 참가돼 (초대코드 ${cloud.trip.code})`
       // 폰에서는 카톡 등으로 바로 보낼 수 있는 공유 시트를 띄운다
       if (navigator.share) {
         try { await navigator.share({ title: '후쿠오카 수첩', text, url }); return } catch (err) {
@@ -841,6 +849,124 @@ $('jn-go').addEventListener('click', async () => {
   } finally {
     $('jn-go').disabled = false
   }
+})
+
+/* ───────── 홈 화면 설치 안내 ───────── */
+/* 안드로이드·크롬은 설치 버튼을 직접 띄울 수 있다. 사파리는 불가라 손으로 안내한다. */
+let installPrompt = null
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault()
+  installPrompt = e
+  renderInstall()
+})
+window.addEventListener('appinstalled', () => { installPrompt = null; renderInstall() })
+
+/* 사파리 공유 시트에서 '홈 화면에 추가'가 어디 있는지 보여주는 삽화 */
+const shareSheetSvg = () => `
+<svg class="sheetfig" viewBox="0 0 300 232" role="img" aria-label="사파리 공유 시트에서 홈 화면에 추가 위치">
+  <rect x="4" y="4" width="292" height="224" rx="16" fill="var(--surface2)" stroke="var(--line)"/>
+  <rect x="16" y="16" width="26" height="26" rx="6" fill="var(--indigo)"/>
+  <text x="50" y="28" font-size="11" font-weight="700" fill="var(--ink)">후쿠오카 수첩</text>
+  <text x="50" y="41" font-size="9" fill="var(--muted)">kozikim.github.io</text>
+  <line x1="16" y1="55" x2="284" y2="55" stroke="var(--line)"/>
+  <g font-size="10.5" fill="var(--muted)">
+    <text x="46" y="76">북마크에 추가</text>
+    <text x="46" y="102">QR 코드 만들기</text>
+    <text x="46" y="128">페이지에서 찾기</text>
+  </g>
+  <g fill="none" stroke="var(--muted)" stroke-width="1.4">
+    <path d="M25 68l5 10 5-10-5 3z"/><rect x="25" y="94" width="10" height="10" rx="2"/>
+    <circle cx="30" cy="123" r="5"/>
+  </g>
+  <!-- 강조: 홈 화면에 추가 -->
+  <rect x="12" y="142" width="276" height="34" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.6"/>
+  <g stroke="var(--accent)" stroke-width="1.8" fill="none">
+    <rect x="24" y="152" width="14" height="14" rx="3.5"/>
+    <path d="M31 155.5v7M27.5 159h7" stroke-linecap="round"/>
+  </g>
+  <text x="48" y="164" font-size="11.5" font-weight="800" fill="var(--accent)">홈 화면에 추가</text>
+  <text x="272" y="164" font-size="13" font-weight="800" fill="var(--accent)" text-anchor="end">←</text>
+  <g font-size="10.5" fill="var(--muted)">
+    <text x="46" y="197">새로운 빠른 메모에 추가</text>
+    <text x="46" y="219">Safari에서 열기</text>
+  </g>
+  <g fill="none" stroke="var(--muted)" stroke-width="1.4">
+    <rect x="25" y="189" width="10" height="10" rx="2"/><circle cx="30" cy="214" r="5"/>
+  </g>
+</svg>`
+
+const GUIDES = {
+  ios: {
+    figure: shareSheetSvg,
+    icon: '', title: '아이폰 · 아이패드 (사파리)',
+    steps: [
+      '<b>사파리</b>로 이 페이지를 엽니다. (크롬·네이버 앱에서는 설치가 안 돼요)',
+      '주소창 오른쪽 또는 화면 아래의 <b>공유 버튼</b>(네모에 위쪽 화살표)을 누릅니다.',
+      '메뉴를 아래로 내려 <b>홈 화면에 추가</b>를 누릅니다.',
+      '오른쪽 위 <b>추가</b>를 누르면 끝이에요.',
+    ],
+    note: '아이폰은 홈 화면에 추가한 뒤 그 앱에서 열어야 알림을 켤 수 있어요. 애플 정책이라 사파리 탭에서는 안 됩니다.',
+  },
+  android: {
+    icon: '', title: '안드로이드 (크롬)',
+    steps: [
+      '주소창 오른쪽 <b>⋮</b> 메뉴를 누릅니다.',
+      '<b>앱 설치</b> 또는 <b>홈 화면에 추가</b>를 누릅니다.',
+      '<b>설치</b>를 누르면 끝이에요.',
+    ],
+    note: '설치하면 알림도 바로 받을 수 있어요.',
+  },
+  desktop: {
+    icon: '', title: 'PC (크롬 · 엣지)',
+    steps: [
+      '주소창 오른쪽 끝의 <b>설치 아이콘</b>을 누릅니다.',
+      '안 보이면 <b>⋮</b> 메뉴 → <b>캐스트, 저장 및 공유</b> → <b>페이지를 앱으로 설치</b>를 고릅니다.',
+    ],
+    note: '',
+  },
+}
+function detectPlatform() {
+  const ua = navigator.userAgent
+  if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return 'ios'
+  if (/Android/.test(ua)) return 'android'
+  return 'desktop'
+}
+function guideCard(g, main) {
+  return `<div class="card guide ${main ? 'main' : ''}">
+    <div class="gt">${esc(g.title)}${main ? '<span class="cat mine">내 기기</span>' : ''}</div>
+    <ol class="gsteps">${g.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+    ${g.figure ? g.figure() : ''}
+    ${g.note ? `<p class="hint">${esc(g.note)}</p>` : ''}
+  </div>`
+}
+function renderInstall() {
+  const el = $('installBox'); if (!el) return
+  const plat = detectPlatform()
+  if (isStandalone()) {
+    el.innerHTML = `<div class="card"><div class="rowtop"><span class="pname">✅ 이미 설치돼 있어요</span></div>
+      <p class="pdesc">홈 화면 앱으로 열고 있습니다. 알림도 켤 수 있어요.</p>
+      <div class="acts"><button class="btn small ghost" data-go-share>함께 쓰기·알림 설정으로</button></div></div>`
+    return
+  }
+  let html = ''
+  if (installPrompt) {
+    html += `<div class="card"><div class="rowtop"><span class="pname">📲 바로 설치하기</span></div>
+      <p class="pdesc">이 기기는 버튼 한 번으로 설치할 수 있어요.</p>
+      <div class="acts"><button class="btn" id="installNow">홈 화면에 설치</button></div></div>`
+  }
+  html += guideCard(GUIDES[plat], true)
+  html += `<h3>다른 기기에서는</h3>`
+  for (const k of Object.keys(GUIDES)) if (k !== plat) html += guideCard(GUIDES[k], false)
+  el.innerHTML = html
+}
+$('installBox').addEventListener('click', async e => {
+  if (e.target.closest('[data-go-share]')) { switchTab('more'); return }
+  if (!e.target.closest('#installNow') || !installPrompt) return
+  installPrompt.prompt()
+  const { outcome } = await installPrompt.userChoice
+  if (outcome === 'accepted') toast('설치했어요! 홈 화면에서 열어보세요.')
+  installPrompt = null
+  renderInstall()
 })
 
 /* ───────── 꿀팁 탭 ───────── */
@@ -1092,7 +1218,7 @@ $('resetBtn').addEventListener('click', () => {
 $('fe-cat').innerHTML = CATS.map(c => `<option>${esc(c)}</option>`).join('')
 function renderAll() {
   renderFoodFilters(); renderFoods(); renderHotelForm(); renderHotel()
-  renderDays(); renderTips(); renderChecks(); renderExpenses(); refreshPickOptions()
+  renderDays(); renderTips(); renderChecks(); renderExpenses(); renderInstall(); refreshPickOptions()
   fxRate.value = S.rate; fxCalc()
 }
 renderAll()

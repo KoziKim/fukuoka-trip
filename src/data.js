@@ -56,6 +56,9 @@ export const PRESET_FOODS = [
 ];
 
 export const PRESET_SPOTS = [
+  /* 이번 여행의 목적지 — 시내에서 떨어진 오노조시라 이동시간을 넉넉히 잡을 것 */
+  {id:"w01", name:"로열체스터 후쿠오카 (결혼식장)", area:"오노조시 (근교)", lat:33.5403, lng:130.4764,
+   desc:"ロイヤルチェスター福岡 · 大野城市雑餉隈町3-3-15. 니시테츠 春日原(카스가바루)역 도보 5분, JR 春日(카스가)역 도보 10분. 하카타역에서 차로 약 20분, 역에서 무료 셔틀버스 운행. 주차 약 90대 무료."},
   {id:"s01", name:"캐널시티 하카타", area:"하카타", lat:33.5899, lng:130.4113, desc:"후쿠오카 최대 쇼핑몰 · 분수쇼 · 무인양품·니토리", rating:3.5, review:{sum:"쇼핑과 분수쇼를 한 번에 해결하는 곳이지만 감동까지는 아니에요.", good:"무인양품·니토리가 한곳에 있고 분수쇼는 무료로 볼 수 있어요.", bad:"매장 구성이 한국 대형몰과 크게 다르지 않아 오래 있으면 아까워요.", note:"분수쇼 시간표를 확인하고 저녁 식사 전후로 1~2시간만 잡으세요."}},
   {id:"s02", name:"구시다 신사", area:"기온", lat:33.5926, lng:130.4106, desc:"하카타 기온 야마카사 축제의 본거지. 주변 거리에서 전통 기념품·소품샵 구경", rating:3.5, review:{sum:"규모는 작지만 하카타 분위기를 짧게 훑기엔 괜찮은 코스예요.", good:"야마카사 축제 장식 수레를 상시 볼 수 있고 입장이 무료예요.", bad:"10분이면 다 돌 만큼 작아서 여기만 보러 가긴 애매해요.", note:"캐널시티·기온 산책과 묶고 주변 골목 기념품 가게까지 함께 보세요."}},
   {id:"s03", name:"오호리 공원", area:"오호리코엔", lat:33.5861, lng:130.3767, desc:"호수 산책 · 스타벅스 오호리공원점", rating:4, review:{sum:"도심에서 제대로 쉬어갈 수 있는 곳이라 여유 있는 일정엔 꼭 넣으세요.", good:"호수를 한 바퀴 도는 산책길과 스타벅스 오호리공원점 뷰가 좋아요.", bad:"비 오는 날이나 한여름·한겨울엔 매력이 확 떨어져요.", note:"마이즈루 공원·시립미술관과 묶어 반나절 코스로 잡으면 효율이 좋아요."}},
@@ -81,10 +84,10 @@ export const PRESET_SPOTS = [
 
 /* 확정 숙소는 hotelName을 채워 선택 시 이름까지 자동 입력 */
 export const HOTEL_PRESETS = [
-  {group:"우리 숙소 (확정)", name:"ZONK HOTEL Hakata", hotelName:"ZONK HOTEL Hakata",
-   lat:33.5850, lng:130.4222, note:"博多駅南1-15-1 · 하카타역 남쪽, 도보 약 8분"},
-  {group:"우리 숙소 (확정)", name:"호텔 몬토레 라 스루 후쿠오카", hotelName:"호텔 몬토레 라 스루 후쿠오카",
-   lat:33.5903, lng:130.3959, note:"大名2-8-27 · 지하철 텐진역 1번 출구 도보 2분"},
+  {id:"stay1", group:"우리 숙소 (확정)", name:"ZONK HOTEL Hakata", hotelName:"ZONK HOTEL Hakata",
+   lat:33.5850, lng:130.4222, area:"하카타역 남쪽", note:"博多駅南1-15-1 · 하카타역 남쪽, 도보 약 8분"},
+  {id:"stay2", group:"우리 숙소 (확정)", name:"호텔 몬토레 라 스루 후쿠오카", hotelName:"호텔 몬토레 라 스루 후쿠오카",
+   lat:33.5903, lng:130.3959, area:"텐진 다이묘", note:"大名2-8-27 · 지하철 텐진역 1번 출구 도보 2분"},
   {group:"지역으로 대략 설정", name:"하카타역 주변", lat:33.5900, lng:130.4200},
   {group:"지역으로 대략 설정", name:"기온 (하카타역 도보권)", lat:33.5924, lng:130.4148},
   {group:"지역으로 대략 설정", name:"나카스 주변", lat:33.5940, lng:130.4070},
@@ -109,13 +112,25 @@ export const STN = {
   watanabe:{n:"와타나베도리",lat:33.5836,lng:130.4009}, yakuin:{n:"야쿠인",lat:33.5823,lng:130.3975},
   yakuino:{n:"야쿠인오도리",lat:33.5808,lng:130.3931}, sakurazaka:{n:"사쿠라자카",lat:33.5792,lng:130.3869},
   ropponmatsu:{n:"롯폰마츠",lat:33.5788,lng:130.3796},
+  /* 니시테츠 텐진오무타선 — 시내 남쪽·오노조 방면은 지하철이 닿지 않는다 */
+  ntenjin:{n:"니시테츠후쿠오카(텐진)",lat:33.5893,lng:130.3994}, nyakuin:{n:"니시테츠 야쿠인",lat:33.5824,lng:130.4017},
+  nhirao:{n:"니시테츠히라오",lat:33.5740,lng:130.4060}, takamiya:{n:"다카미야",lat:33.5672,lng:130.4145},
+  ohashi:{n:"오하시",lat:33.5592,lng:130.4265}, ijiri:{n:"이지리",lat:33.5521,lng:130.4433},
+  zasshonokuma:{n:"잣쇼노쿠마",lat:33.5474,lng:130.4619}, kasugabaru:{n:"카스가바루",lat:33.5380,lng:130.4731},
+  shirakibaru:{n:"시라키바루",lat:33.5283,lng:130.4831}, shimoori:{n:"시모오리",lat:33.5223,lng:130.4894},
 };
 export const LINES = [
   ["meinohama","muromi","fujisaki","nishijin","tojinmachi","ohori","akasaka","tenjin","nakasu","gion","hakata","higashihie","kuko"],
   ["nakasu","gofukumachi","chiyo","maidashi","hakozakim","hakozakik","kaizuka"],
   ["hakata","kushida","tenjinm","watanabe","yakuin","yakuino","sakurazaka","ropponmatsu"],
+  ["ntenjin","nyakuin","nhirao","takamiya","ohashi","ijiri","zasshonokuma","kasugabaru","shirakibaru","shimoori"],
 ];
-export const TRANSFERS = [["tenjin","tenjinm",6]]; // 도보 환승
+/* 도보 환승 (분) */
+export const TRANSFERS = [
+  ["tenjin","tenjinm",6],
+  ["tenjin","ntenjin",4],   // 지하철 텐진 ↔ 니시테츠 후쿠오카
+  ["yakuin","nyakuin",3],
+];
 
 /* 항목은 문자열 또는 { t, pri } — pri 1=필수(안 하면 곤란), 2=중요(알면 크게 이득) */
 export const TIPS = [
