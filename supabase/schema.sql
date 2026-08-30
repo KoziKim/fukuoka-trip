@@ -157,13 +157,21 @@ declare
 begin
   if auth.uid() is null then raise exception 'AUTH_REQUIRED'; end if;
 
-  select id into v_trip from public.trips where code = upper(trim(p_code));
+  select t.id into v_trip from public.trips t where t.code = upper(trim(p_code));
   if v_trip is null then raise exception 'TRIP_NOT_FOUND'; end if;
 
-  insert into public.members (trip_id, user_id, name)
-    values (v_trip, auth.uid(), p_member)
-    on conflict (trip_id, user_id) do update set name = excluded.name
-    returning id into v_member;
+  -- on conflict (trip_id, user_id) 를 쓰면 RETURNS TABLE 의 trip_id 와 이름이 겹쳐
+  -- "column reference is ambiguous" 오류가 난다. 조회 후 분기하는 방식으로 피한다.
+  select m.id into v_member from public.members m
+    where m.trip_id = v_trip and m.user_id = auth.uid();
+
+  if v_member is null then
+    insert into public.members (trip_id, user_id, name)
+      values (v_trip, auth.uid(), p_member)
+      returning id into v_member;
+  else
+    update public.members m set name = p_member where m.id = v_member;
+  end if;
 
   return query select v_trip, upper(trim(p_code)), v_member;
 end $$;
