@@ -29,6 +29,24 @@ function allPlaces() {
 }
 function findPlace(id) { return allPlaces().find(p => p.id === id) }
 
+/* ───────── 테마 (기본 라이트, 토글로 다크) ───────── */
+const themeBtn = $('themeBtn')
+function paintTheme() {
+  const dark = document.documentElement.dataset.theme === 'dark'
+  themeBtn.textContent = dark ? '☀️' : '🌙'
+  themeBtn.setAttribute('aria-label', dark ? '라이트 모드 켜기' : '다크 모드 켜기')
+  const meta = document.querySelector('meta[name="theme-color"]')
+  if (meta) meta.content = dark ? '#131A23' : '#2F4E7E'
+}
+themeBtn.addEventListener('click', () => {
+  const dark = document.documentElement.dataset.theme === 'dark'
+  if (dark) delete document.documentElement.dataset.theme
+  else document.documentElement.dataset.theme = 'dark'
+  try { localStorage.setItem('fukuoka-theme', dark ? 'light' : 'dark') } catch (e) { /* ignore */ }
+  paintTheme()
+})
+paintTheme()
+
 /* ───────── 탭 ───────── */
 $('tabs').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return
