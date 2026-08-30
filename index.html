@@ -44,7 +44,7 @@
 </header>
 
 <nav class="tabs" id="tabs">
-  <button data-tab="food" class="on">맛집</button>
+  <button data-tab="food" class="on">장소</button>
   <button data-tab="plan">일정</button>
   <button data-tab="exp">경비</button>
   <button data-tab="more">메뉴</button>
@@ -85,19 +85,20 @@
 
 <!-- ══════════ 맛집 ══════════ -->
 <section class="pane on" id="pane-food">
-  <h2>맛집 리스트</h2>
-  <p class="desc">기본으로 담아둔 인기 맛집에 내 맛집을 추가하세요. 숙소를 설정하면 각 맛집까지 걸리는 시간이 표시됩니다.</p>
+  <h2 id="placeTitle">맛집 리스트</h2>
+  <p class="desc" id="placeDesc"></p>
+  <div class="segs" id="placeScope"></div>
   <div class="filters" id="foodFilters"></div>
   <div class="sortrow" id="foodSort"></div>
   <div id="foodList"></div>
-  <button class="btn" id="addFoodBtn">+ 맛집 추가</button>
+  <button class="btn" id="addFoodBtn">+ 추가</button>
   <form class="editor" id="foodEditor" hidden>
     <input type="hidden" id="fe-id">
     <div class="grid">
       <div><label class="f" for="fe-name">이름 *</label><input id="fe-name" required placeholder="예: 우오베이 스시"></div>
-      <div><label class="f" for="fe-cat">분류</label><select id="fe-cat"></select></div>
+      <div id="fe-catWrap"><label class="f" for="fe-cat">분류</label><select id="fe-cat"></select></div>
       <div><label class="f" for="fe-area">지역</label><input id="fe-area" placeholder="예: 하카타"></div>
-      <div><label class="f" for="fe-price">가격대</label><input id="fe-price" placeholder="예: ¥1,000~"></div>
+      <div id="fe-priceWrap"><label class="f" for="fe-price">가격대</label><input id="fe-price" placeholder="예: ¥1,000~"></div>
       <div><label class="f" for="fe-lat">위도 (선택)</label><input id="fe-lat" inputmode="decimal" placeholder="33.5897"></div>
       <div><label class="f" for="fe-lng">경도 (선택)</label><input id="fe-lng" inputmode="decimal" placeholder="130.4207"></div>
       <div class="full"><label class="f" for="fe-desc">메모</label><input id="fe-desc" placeholder="대표 메뉴, 웨이팅 팁 등"></div>

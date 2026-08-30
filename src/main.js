@@ -47,7 +47,16 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const gmap = name => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + ' 福岡')}`
 const $ = id => document.getElementById(id)
 
-function allFoods() { return PRESET_FOODS.filter(f => !S.hiddenFoods.includes(f.id)).concat(S.customFoods) }
+/* 직접 추가한 항목은 kind 로 맛집/명소를 구분한다 (예전 데이터는 kind 가 없어 맛집으로 본다) */
+function allFoods() {
+  return PRESET_FOODS.filter(f => !S.hiddenFoods.includes(f.id))
+    .concat(S.customFoods.filter(f => f.kind !== 'spot'))
+}
+function allSpots() {
+  return PRESET_SPOTS.filter(s => !S.hiddenFoods.includes(s.id))
+    .concat(S.customFoods.filter(f => f.kind === 'spot'))
+}
+const scopedPlaces = () => (placeScope === 'food' ? allFoods() : allSpots())
 function allPlaces() {
   const places = [{ ...ICN, kind: '공항' }, { ...AIRPORT, kind: '공항' }]
   // 확정 숙소 두 곳은 일정에 바로 넣을 수 있게 장소로도 제공한다 (묵는 날이 나뉘므로)
@@ -142,14 +151,29 @@ document.querySelectorAll('button[data-back]').forEach(b => {
 })
 
 /* ───────── 맛집 탭 ───────── */
-let foodFilter = '전체', foodSort = 'rating'
+let foodFilter = '전체', foodSort = 'rating', placeScope = 'food'
 function renderFoodFilters() {
-  const cats = ['전체', '⭐ 즐겨찾기', ...CATS]
+  $('placeScope').innerHTML = [['food', '🍜 맛집'], ['spot', '📍 명소']]
+    .map(([k, t]) => `<button class="${k === placeScope ? 'on' : ''}" data-p="${k}">${t}</button>`).join('')
+  $('placeTitle').textContent = placeScope === 'food' ? '맛집 리스트' : '명소 · 쇼핑'
+  $('placeDesc').textContent = placeScope === 'food'
+    ? '기본으로 담아둔 인기 맛집에 내 맛집을 추가하세요. 숙소를 설정하면 걸리는 시간이 표시됩니다.'
+    : '관광지·쇼핑·마트와 이번 여행의 주요 장소예요. 일정에 바로 넣을 수 있습니다.'
+  $('addFoodBtn').textContent = placeScope === 'food' ? '+ 맛집 추가' : '+ 명소 추가'
+
+  // 명소는 분류가 따로 없어 즐겨찾기만 거른다
+  const cats = placeScope === 'food' ? ['전체', '⭐ 즐겨찾기', ...CATS] : ['전체', '⭐ 즐겨찾기']
   $('foodFilters').innerHTML = cats.map(c =>
     `<button class="${c === foodFilter ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`).join('')
   $('foodSort').innerHTML = `<span>정렬</span>` + [['rating', '별점 높은 순'], ['dist', '숙소에서 가까운 순']]
     .map(([k, t]) => `<button class="${k === foodSort ? 'on' : ''}" data-s="${k}">${t}</button>`).join('')
 }
+$('placeScope').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return
+  placeScope = b.dataset.p
+  foodFilter = '전체'
+  renderFoodFilters(); renderFoods()
+})
 $('foodSort').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return
   foodSort = b.dataset.s; renderFoodFilters(); renderFoods()
@@ -160,7 +184,7 @@ $('foodFilters').addEventListener('click', e => {
 })
 function renderFoods() {
   const hotel = (S.hotel && S.hotel.lat) ? S.hotel : null
-  let list = allFoods()
+  let list = scopedPlaces()
   if (foodFilter === '⭐ 즐겨찾기') list = list.filter(f => (S.foodMeta[f.id] || {}).fav)
   else if (foodFilter !== '전체') list = list.filter(f => f.cat === foodFilter)
   if (foodSort === 'rating') {
@@ -171,14 +195,17 @@ function renderFoods() {
     })
   }
   const el = $('foodList')
-  if (!list.length) { el.innerHTML = `<div class="empty">해당하는 맛집이 없어요. 아래에서 추가해 보세요.</div>`; return }
+  if (!list.length) {
+    el.innerHTML = `<div class="empty">해당하는 ${placeScope === 'food' ? '맛집' : '명소'}이 없어요. 아래에서 추가해 보세요.</div>`
+    return
+  }
   el.innerHTML = list.map(f => {
     const m = S.foodMeta[f.id] || {}
     const r = hotel && f.lat ? routes(hotel, f) : null
     return `<div class="card ${m.visited ? 'dim' : ''}">
       <div class="rowtop">
         <span class="pname">${esc(f.name)}</span>
-        <span class="cat">${esc(f.cat || '기타')}</span>
+        ${f.cat ? `<span class="cat">${esc(f.cat)}</span>` : ''}
         ${f.own ? `<span class="cat mine">내 픽</span>` : ''}
         <span class="area">${esc(f.area || '')}</span>
         ${f.price ? `<span class="area">· ${esc(f.price)}</span>` : ''}
@@ -191,6 +218,7 @@ function renderFoods() {
       <div class="acts">
         <button class="fav ${m.fav ? 'on' : ''}" data-act="fav" data-id="${f.id}">${m.fav ? '⭐ 즐겨찾기' : '☆ 즐겨찾기'}</button>
         <button class="done ${m.visited ? 'on' : ''}" data-act="visited" data-id="${f.id}">${m.visited ? '✓ 다녀옴' : '다녀옴 표시'}</button>
+        ${f.lat != null ? `<button data-act="plan" data-id="${f.id}">일정에 추가</button>` : ''}
         <a href="${gmap(f.name)}" target="_blank" rel="noopener">지도 ↗</a>
         ${f.id.startsWith('x') ? `<button data-act="edit" data-id="${f.id}">수정</button>` : ''}
         <button data-act="del" data-id="${f.id}">삭제</button>
@@ -212,12 +240,20 @@ $('foodList').addEventListener('click', e => {
   } else if (act === 'edit') {
     const f = S.customFoods.find(x => x.id === id); if (!f) return
     openFoodEditor(f); return
+  } else if (act === 'plan') {
+    switchTab('plan')
+    openPicker(id)
+    return
   }
   save(); renderFoods(); renderHotel(); refreshPickOptions()
 })
 const foodEditor = $('foodEditor')
 function openFoodEditor(f) {
   foodEditor.hidden = false
+  // 명소에는 음식 분류·가격대가 어울리지 않아 감춘다
+  const isSpot = placeScope === 'spot'
+  $('fe-catWrap').hidden = isSpot
+  $('fe-priceWrap').hidden = isSpot
   $('fe-id').value = f ? f.id : ''
   $('fe-name').value = f ? f.name : ''
   $('fe-cat').value = f ? f.cat : CATS[CATS.length - 1]
@@ -236,8 +272,9 @@ foodEditor.addEventListener('submit', e => {
   const lat = parseFloat($('fe-lat').value), lng = parseFloat($('fe-lng').value)
   const f = {
     id: id || uid(),
+    kind: placeScope === 'spot' ? 'spot' : 'food',
     name: $('fe-name').value.trim(),
-    cat: $('fe-cat').value,
+    cat: placeScope === 'spot' ? '' : $('fe-cat').value,
     area: $('fe-area').value.trim(),
     price: $('fe-price').value.trim(),
     desc: $('fe-desc').value.trim(),
