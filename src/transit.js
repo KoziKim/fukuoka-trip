@@ -43,22 +43,32 @@ function nearestStations(p, n) {
 
 export const walkMin = km => Math.max(1, Math.round(km * 1000 * 1.3 / 80))
 
+/**
+ * 지하철 접근 지점. 보통은 걸어갈 수 있는 가까운 역들이지만,
+ * 공항 국제선처럼 역까지 셔틀을 타는 곳은 station/stationAccessMin으로 직접 지정한다.
+ */
+function accessPoints(p) {
+  if (p.station && STN[p.station]) return [{ k: p.station, min: p.stationAccessMin ?? 5 }]
+  return nearestStations(p, 3).map(s => ({ k: s.k, min: walkMin(s.d) })).filter(s => s.min <= 16)
+}
+
 /** 두 지점 간 이동 옵션 (도보/지하철/택시) — 좌표 없으면 null */
 export function routes(a, b) {
   if (!a || !b || a.lat == null || b.lat == null || a.lat === '' || b.lat === '') return null
   const d = hav(a, b)
   const out = { dKm: d, walk: walkMin(d), taxi: null, metro: null, far: d > 12 }
-  out.taxi = { min: Math.max(5, Math.round(d * 1.4 / 0.42)), fare: Math.round((670 + Math.max(0, d * 1.4 - 1) * 410) / 10) * 10 }
+  // 도로 거리는 직선거리보다 길다. 공항 국제선처럼 크게 우회하는 곳은 roadDetour로 따로 지정.
+  const detour = Math.max(1.4, a.roadDetour || 0, b.roadDetour || 0)
+  const roadKm = d * detour
+  out.taxi = { min: Math.max(5, Math.round(roadKm / 0.38)), fare: Math.round((670 + Math.max(0, roadKm - 1) * 410) / 10) * 10 }
   let best = null
-  for (const sa of nearestStations(a, 3))
-    for (const sb of nearestStations(b, 3)) {
+  for (const sa of accessPoints(a))
+    for (const sb of accessPoints(b)) {
       if (sa.k === sb.k) continue
-      const wa = walkMin(sa.d), wb = walkMin(sb.d)
-      if (wa > 16 || wb > 16) continue
       const r = dijkstra(sa.k, sb.k)
       if (!r) continue
-      const total = wa + 4 + Math.round(r.min) + wb
-      if (!best || total < best.min) best = { min: total, from: STN[sa.k].n, to: STN[sb.k].n, wa, wb, ride: Math.round(r.min) }
+      const total = sa.min + 4 + Math.round(r.min) + sb.min
+      if (!best || total < best.min) best = { min: total, from: STN[sa.k].n, to: STN[sb.k].n, wa: sa.min, wb: sb.min, ride: Math.round(r.min) }
     }
   if (best && best.min < out.walk) out.metro = best
   return out

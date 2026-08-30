@@ -65,7 +65,8 @@
 <!-- ══════════ 일정 ══════════ -->
 <section class="pane" id="pane-plan">
   <h2>여행 계획표</h2>
-  <p class="desc">시간대별로 장소를 넣으면 앞뒤 장소 사이 이동시간이 자동 계산됩니다.</p>
+  <p class="desc">시간대별로 장소를 넣으면 앞뒤 장소 사이 이동시간이 자동 계산됩니다. 아래 '가까운 곳'에서 바로 일정에 넣을 수 있어요.</p>
+  <div id="planHotel"></div>
   <div class="card" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
     <label class="f" for="tripStart" style="margin:0">여행 시작일</label>
     <input type="date" id="tripStart" style="width:auto">
@@ -73,6 +74,7 @@
   </div>
   <div class="daytabs" id="dayTabs"></div>
   <div id="dayView"></div>
+  <div id="nearbyWrap"></div>
 </section>
 
 <!-- ══════════ 숙소·이동 ══════════ -->
@@ -167,6 +169,10 @@
 
 <dialog id="pickDialog">
   <h3 style="margin-top:0">일정에 장소 추가</h3>
+  <div id="pk-quickWrap" hidden>
+    <label class="f" id="pk-quickLabel">빠른 선택</label>
+    <div class="quick" id="pk-quick"></div>
+  </div>
   <div class="grid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
     <div><label class="f" for="pk-time">시간</label><input type="time" id="pk-time" value="10:00"></div>
     <div><label class="f" for="pk-place">장소</label><select id="pk-place"></select></div>

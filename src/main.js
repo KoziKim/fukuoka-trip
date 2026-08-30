@@ -48,10 +48,14 @@ themeBtn.addEventListener('click', () => {
 paintTheme()
 
 /* ───────── 탭 ───────── */
+function switchTab(name) {
+  document.querySelectorAll('nav.tabs button').forEach(x => x.classList.toggle('on', x.dataset.tab === name))
+  document.querySelectorAll('section.pane').forEach(x => x.classList.toggle('on', x.id === 'pane-' + name))
+  window.scrollTo({ top: 0 })
+}
 $('tabs').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return
-  document.querySelectorAll('nav.tabs button').forEach(x => x.classList.toggle('on', x === b))
-  document.querySelectorAll('section.pane').forEach(x => x.classList.toggle('on', x.id === 'pane-' + b.dataset.tab))
+  switchTab(b.dataset.tab)
 })
 
 /* ───────── 맛집 탭 ───────── */
@@ -191,7 +195,7 @@ $('hotelForm').addEventListener('submit', e => {
   const lat = parseFloat($('ht-lat').value), lng = parseFloat($('ht-lng').value)
   if (!isFinite(lat) || !isFinite(lng)) { alert('위치(지역 선택 또는 좌표)를 입력해 주세요.'); return }
   S.hotel = { name: $('ht-name').value.trim(), lat, lng }
-  save(); renderHotel(); renderFoods(); refreshPickOptions()
+  save(); renderHotel(); renderFoods(); refreshPickOptions(); renderDays()
 })
 function renderHotel() {
   const el = $('hotelResult')
@@ -201,7 +205,7 @@ function renderHotel() {
   let html = `<div class="hero">
     <div class="t">🏨 ${esc(h.name || '우리 숙소')}</div>
     <div class="d">후쿠오카공항(국제선)에서</div>
-    <div class="big">${ra && ra.metro ? `🚇 약 ${ra.metro.min + 8}분` : (ra ? `🚕 약 ${ra.taxi.min}분` : '—')}</div>
+    <div class="big">${ra && ra.metro ? `🚇 약 ${ra.metro.min}분` : (ra ? `🚕 약 ${ra.taxi.min}분` : '—')}</div>
     <div class="d">${ra && ra.metro ? `국제선→국내선 무료셔틀 약 8분 포함 · ${ra.metro.from}→${ra.metro.to} 하차 후 도보 ${ra.metro.wb}분` : ''}
     ${ra ? ` · 🚕 택시 약 ${ra.taxi.min}분 (약 ¥${ra.taxi.fare.toLocaleString()})` : ''}</div>
   </div>`
@@ -275,6 +279,8 @@ function renderDays() {
   }
   $('dayView').innerHTML = html
   renderDday()
+  renderPlanHotel()
+  renderNearby()
 }
 $('dayTabs').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return; curDay = +b.dataset.i; renderDays()
@@ -308,11 +314,45 @@ function refreshPickOptions() {
 $('pk-place').addEventListener('change', e => {
   $('pk-customWrap').hidden = e.target.value !== '__custom'
 })
-function openPicker() {
+function openPicker(placeId, time) {
   refreshPickOptions()
   $('pk-memo').value = ''
   $('pk-customWrap').hidden = true
+  if (placeId) $('pk-place').value = placeId
+  $('pk-time').value = time || suggestNextTime()
+  renderQuickPicks(placeId)
   pickDialog.showModal()
+}
+/* 다음 목적지 후보 3개 — 기준점에서 가까운 순 */
+function renderQuickPicks(selectedId) {
+  const { base, rows } = nearestCandidates(3)
+  const wrap = $('pk-quickWrap')
+  if (!rows.length) { wrap.hidden = true; return }
+  wrap.hidden = false
+  $('pk-quickLabel').textContent = `빠른 선택 · ${base.short} 기준 가까운 순`
+  $('pk-quick').innerHTML = rows.map(x => {
+    const walking = x.r.walk <= 15 || !x.r.metro
+    const mins = walking ? x.r.walk : x.r.metro.min
+    return `<button type="button" class="${x.p.id === selectedId ? 'on' : ''}" data-q="${x.p.id}" data-mins="${mins}">
+      <span class="qn">${esc(x.p.name)}</span><span class="qt">${walking ? '🚶' : '🚇'} ${mins}분</span></button>`
+  }).join('')
+}
+$('pk-quick').addEventListener('click', e => {
+  const b = e.target.closest('button[data-q]'); if (!b) return
+  $('pk-place').value = b.dataset.q
+  $('pk-customWrap').hidden = true
+  $('pk-time').value = suggestNextTime(+b.dataset.mins)
+  $('pk-quick').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b))
+})
+/* 마지막 일정 + 체류 60분 + 이동시간 → 다음 일정 시각 제안 */
+function suggestNextTime(travelMin) {
+  const items = currentDayItems()
+  const last = items[items.length - 1]
+  if (!last || !last.time) return '10:00'
+  const [h, m] = last.time.split(':').map(Number)
+  if (!isFinite(h) || !isFinite(m)) return '10:00'
+  const t = Math.min(23 * 60 + 55, Math.round((h * 60 + m + 60 + (travelMin ?? 20)) / 5) * 5)
+  return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0')
 }
 $('pk-close').addEventListener('click', () => pickDialog.close())
 $('pk-save').addEventListener('click', () => {
@@ -334,6 +374,114 @@ function renderDday() {
   el.hidden = false
   el.textContent = diff > 0 ? `D-${diff}` : (diff === 0 ? 'D-DAY ✈️' : `여행 ${1 - diff}일차`)
 }
+
+/* ───────── 플래너: 숙소 요약 + 동선 기준 추천 장소 ───────── */
+function currentDayItems() { return (S.days[curDay] || { items: [] }).items }
+
+function renderPlanHotel() {
+  const el = $('planHotel')
+  if (!S.hotel || !S.hotel.lat) {
+    el.innerHTML = `<div class="card hotelbar">
+      <div class="info"><div class="nm">🏨 숙소 미설정</div>
+        <div class="meta">숙소를 정하면 이동시간이 계산돼요</div></div>
+      <button class="btn small" data-go="move">설정</button>
+    </div>`
+    return
+  }
+  const ra = routes(AIRPORT, S.hotel)
+  const air = ra && ra.metro ? `🚇 약 ${ra.metro.min}분` : (ra ? `🚕 약 ${ra.taxi.min}분` : '—')
+  el.innerHTML = `<div class="card hotelbar">
+    <div class="info"><div class="nm">🏨 ${esc(S.hotel.name || '우리 숙소')}</div>
+      <div class="meta">후쿠오카공항에서 ${air}</div></div>
+    <button class="btn small ghost" data-go="move">변경</button>
+  </div>`
+}
+$('planHotel').addEventListener('click', e => {
+  if (e.target.closest('button[data-go="move"]')) switchTab('move')
+})
+
+/* 추천 기준점: 그 날 마지막 일정 → 없으면 숙소 → 없으면 공항 */
+function nearbyBase() {
+  const items = currentDayItems()
+  for (let i = items.length - 1; i >= 0; i--) {
+    const p = items[i].placeId ? findPlace(items[i].placeId) : null
+    if (p && p.lat != null) return { p, short: p.name, label: `${p.name} (${items[i].time || '마지막 일정'})`, kind: 'last' }
+  }
+  if (S.hotel && S.hotel.lat) {
+    const nm = `🏨 ${S.hotel.name || '우리 숙소'}`
+    return { p: { id: 'hotel', ...S.hotel }, short: nm, label: nm, kind: 'hotel' }
+  }
+  return { p: AIRPORT, short: '후쿠오카공항', label: AIRPORT.name, kind: 'airport' }
+}
+
+/* 기준점에서 가까운 후보 (광역 이동 제외) */
+function nearestCandidates(n) {
+  const base = nearbyBase()
+  const used = new Set(currentDayItems().map(i => i.placeId).filter(Boolean))
+  const pool = [...allFoods().map(f => ({ ...f, kind: '맛집' })), ...PRESET_SPOTS.map(s => ({ ...s, kind: '명소' }))]
+  const rows = pool
+    .filter(p => p.lat != null && !used.has(p.id) && p.id !== base.p.id)
+    .map(p => ({ p, r: routes(base.p, p) }))
+    .filter(x => x.r && !x.r.far)
+    .sort((a, b) => a.r.dKm - b.r.dKm)
+    .slice(0, n)
+  return { base, rows }
+}
+
+let candFilter = '맛집', candLimit = 8
+function renderNearby() {
+  const base = nearbyBase()
+  const used = new Set(currentDayItems().map(i => i.placeId).filter(Boolean))
+  const foods = allFoods().map(f => ({ ...f, kind: '맛집' }))
+  const spots = PRESET_SPOTS.map(s => ({ ...s, kind: '명소' }))
+  let pool
+  if (candFilter === '맛집') pool = foods
+  else if (candFilter === '명소') pool = spots
+  else if (candFilter === '⭐') pool = foods.filter(f => (S.foodMeta[f.id] || {}).fav)
+  else pool = [...foods, ...spots]
+
+  const rows = pool
+    .filter(p => p.lat != null && !used.has(p.id) && p.id !== base.p.id)
+    .map(p => ({ p, r: routes(base.p, p) }))
+    .filter(x => x.r)
+    .sort((a, b) => a.r.dKm - b.r.dKm)
+
+  const filters = [['맛집', '맛집'], ['명소', '명소'], ['⭐', '⭐ 즐겨찾기'], ['전체', '전체']]
+  let html = `<div class="nearby">
+    <h3 style="margin-top:0">이 동선에서 가까운 곳</h3>
+    <div class="basebar">기준: <b>${esc(base.label)}</b>${base.kind === 'last' ? ' 다음 목적지' : ''}</div>
+    <div class="filters" id="candFilters">${filters.map(([k, t]) =>
+      `<button class="${k === candFilter ? 'on' : ''}" data-c="${k}">${esc(t)}</button>`).join('')}</div>`
+
+  if (!rows.length) {
+    html += `<div class="empty">추가할 만한 장소가 없어요. 필터를 바꾸거나 맛집 탭에서 새로 추가해 보세요.</div>`
+  } else {
+    const shown = rows.slice(0, candLimit)
+    html += `<div class="candlist">` + shown.map(x => {
+      const mins = x.r.far ? null : (x.r.walk <= 15 || !x.r.metro ? x.r.walk : x.r.metro.min)
+      const how = x.r.far ? '광역' : (x.r.walk <= 15 || !x.r.metro ? '🚶 도보' : '🚇 지하철')
+      return `<div class="cand">
+        <div class="info">
+          <div class="nm">${esc(x.p.name)}</div>
+          <div class="meta">${esc(x.p.kind)}${x.p.cat ? ' · ' + esc(x.p.cat) : ''}${x.p.area ? ' · ' + esc(x.p.area) : ''}</div>
+        </div>
+        <div class="t">${mins != null ? `${how}<br>${mins}분` : `${how}<br>${x.r.dKm.toFixed(1)}km`}</div>
+        <button class="add" data-add="${x.p.id}" data-mins="${mins ?? 45}" aria-label="${esc(x.p.name)} 일정에 추가">+</button>
+      </div>`
+    }).join('') + `</div>`
+    if (rows.length > candLimit)
+      html += `<div class="acts" style="justify-content:center"><button class="btn small ghost" id="candMore">더 보기 (${rows.length - candLimit}곳)</button></div>`
+  }
+  html += `</div>`
+  $('nearbyWrap').innerHTML = html
+}
+$('nearbyWrap').addEventListener('click', e => {
+  const f = e.target.closest('#candFilters button')
+  if (f) { candFilter = f.dataset.c; candLimit = 8; renderNearby(); return }
+  if (e.target.closest('#candMore')) { candLimit += 12; renderNearby(); return }
+  const a = e.target.closest('button[data-add]')
+  if (a) openPicker(a.dataset.add, suggestNextTime(+a.dataset.mins))
+})
 
 /* ───────── 꿀팁 탭 ───────── */
 function renderTips() {

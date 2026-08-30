@@ -3,7 +3,12 @@
 
 export const CATS = ["라멘","모츠나베","우동","스시·해산물","텐푸라","돈카츠","함바그","와규·스테이크","오코노미야키","이자카야","카페·디저트","야타이","기타"];
 
-export const AIRPORT = { id: "airport", name: "후쿠오카공항 (국제선)", lat: 33.5847, lng: 130.4443 };
+/* 국제선 터미널. 지하철역은 국내선 쪽이라 무료 셔틀(약 8분)로 접근한다 */
+export const AIRPORT = {
+  id: "airport", name: "후쿠오카공항 (국제선)", lat: 33.5847, lng: 130.4443,
+  station: "kuko", stationAccessMin: 8,
+  roadDetour: 2.2, // 국제선 터미널은 활주로 반대편이라 차로는 크게 돌아간다
+};
 
 export const PRESET_FOODS = [
   {id:"f01", name:"이치란 본점", cat:"라멘", area:"나카스", lat:33.5894, lng:130.4045, price:"¥980~", desc:"돈코츠 라멘 총본점, 24시간 영업. 웨이팅 피하려면 새벽·심야 방문. 본점 한정 나무 상자 라멘."},
