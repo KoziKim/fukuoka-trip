@@ -169,7 +169,7 @@ function subscribe() {
   unsubscribe()
   const filter = `trip_id=eq.${cloud.trip.id}`
   channel = sb.channel(`trip-${cloud.trip.id}`)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'plan_items', filter }, () => onChange('items'))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'plan_items', filter }, p => onChange('plan_items', p))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'comments', filter }, p => onChange('comments', p))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'members', filter }, () => onChange('members'))
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'trips', filter: `id=eq.${cloud.trip.id}` }, () => onChange('state'))
@@ -181,11 +181,45 @@ function unsubscribe() {
 
 /* ─────────── 푸시 알림 ─────────── */
 
-export const pushSupported = () =>
-  pushConfigured && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+/** 브라우저가 웹 푸시를 지원하는가. iOS는 홈 화면에 추가해야만 PushManager가 생긴다 */
+export const pushBrowserOk = () =>
+  'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+export const pushSupported = () => pushConfigured && pushBrowserOk()
 
+export const isIOS = () =>
+  /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+export const isStandalone = () =>
+  window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true
+
+/** 알림을 실제로 보내주는 서버 함수가 배포돼 있는지. 없으면 켜도 알림이 오지 않는다 */
+let backendReady = null
+export async function pushBackendReady() {
+  if (backendReady !== null) return backendReady
+  if (!cloudConfigured) return (backendReady = false)
+  try {
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/notify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
+      body: '{}',
+    })
+    backendReady = r.status !== 404   // 배포돼 있으면 comment_id 없다고 400을 준다
+  } catch (e) {
+    backendReady = false
+  }
+  return backendReady
+}
+
+/**
+ * 'unconfigured' 서버 푸시 키가 아직 등록되지 않음 (브라우저 문제가 아님)
+ * 'no-backend' 키는 있으나 알림 발송 함수가 아직 배포되지 않음
+ * 'ios-needs-install' 아이폰인데 홈 화면 앱으로 열지 않음
+ * 'unsupported' | 'denied' | 'on' | 'off'
+ */
 export async function pushStatus() {
-  if (!pushSupported()) return 'unsupported'
+  if (!pushConfigured) return 'unconfigured'
+  if (!pushBrowserOk()) return isIOS() && !isStandalone() ? 'ios-needs-install' : 'unsupported'
+  if (!(await pushBackendReady())) return 'no-backend'
   if (Notification.permission === 'denied') return 'denied'
   const reg = await navigator.serviceWorker.getRegistration()
   const sub = await reg?.pushManager.getSubscription()
@@ -193,7 +227,12 @@ export async function pushStatus() {
 }
 
 export async function enablePush() {
-  if (!pushSupported()) throw new Error('이 브라우저는 푸시 알림을 지원하지 않아요.')
+  if (!pushConfigured) throw new Error('푸시 알림 서버 설정이 아직 준비되지 않았어요.')
+  if (!pushBrowserOk()) {
+    throw new Error(isIOS() && !isStandalone()
+      ? '아이폰은 사파리 공유 버튼 → 홈 화면에 추가 후, 그 앱에서 열어야 알림을 켤 수 있어요.'
+      : '이 브라우저는 푸시 알림을 지원하지 않아요.')
+  }
   const permission = await Notification.requestPermission()
   if (permission !== 'granted') throw new Error('알림 권한이 필요해요. 브라우저 설정에서 허용해 주세요.')
 

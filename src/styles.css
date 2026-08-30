@@ -273,6 +273,18 @@ table.exp td .rm{border:none; background:none; color:var(--muted); cursor:pointe
 .cmempty{font-size:12.5px; color:var(--muted); padding:2px}
 .cmform{display:flex; gap:6px}
 .cmform input{flex:1; font-size:13.5px; padding:7px 10px}
+/* 실시간 알림 토스트 */
+#toast{
+  position:fixed; left:50%; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:60;
+  transform:translateX(-50%) translateY(14px); opacity:0; pointer-events:none;
+  max-width:min(calc(100vw - 32px), 448px); width:max-content;
+  background:var(--ink); color:var(--bg); padding:11px 16px; border-radius:12px;
+  font-size:13.5px; font-weight:600; line-height:1.45; word-break:break-word;
+  box-shadow:0 6px 24px rgba(0,0,0,.28); transition:opacity .2s ease, transform .2s ease;
+}
+#toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion: reduce){ #toast{transition:none} }
+
 .empty{padding:28px 10px; text-align:center; color:var(--muted); font-size:13.5px; background:var(--surface2); border-radius:12px; border:1px dashed var(--line)}
 dialog{border:1px solid var(--line); border-radius:14px; background:var(--surface); color:var(--ink); max-width:560px; width:calc(100vw - 40px); padding:18px}
 dialog::backdrop{background:rgba(15,20,28,.5)}

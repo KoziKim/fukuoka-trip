@@ -645,7 +645,32 @@ async function refreshCloud() {
     renderShare()
   }
 }
-function onCloudChange() {
+/* 앱을 열어둔 동안 들어오는 변경은 화면 위에 바로 띄운다.
+   (앱이 꺼져 있을 때의 푸시는 서버 함수가 따로 처리한다) */
+let toastTimer = null
+function toast(msg) {
+  let el = $('toast')
+  if (!el) {
+    el = document.createElement('div')
+    el.id = 'toast'
+    el.setAttribute('role', 'status')
+    document.body.appendChild(el)
+  }
+  el.textContent = msg
+  el.classList.add('on')
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => el.classList.remove('on'), 4500)
+}
+
+function onCloudChange(kind, payload) {
+  if (payload?.eventType === 'INSERT') {
+    const row = payload.new
+    if (kind === 'comments' && row && row.member_id !== cloud.me?.memberId) {
+      toast(`💬 ${row.author}: ${row.body}`)
+    } else if (kind === 'plan_items' && row && row.created_by !== cloud.me?.memberId) {
+      toast('🗓️ 친구가 일정을 바꿨어요')
+    }
+  }
   clearTimeout(refreshTimer)
   refreshTimer = setTimeout(refreshCloud, 250)
 }
@@ -692,24 +717,32 @@ async function renderShare() {
       </div></div>`
     return
   }
-  const st = pushSupported() ? await pushStatus() : 'unsupported'
+  const st = await pushStatus()
   const names = cloud.members.map(m => m.name).join(', ')
+  const pushUI = {
+    unconfigured: `<span class="chip">🔔 알림 준비 중 — 서버 설정이 끝나면 켤 수 있어요</span>`,
+    'no-backend': `<span class="chip">🔔 알림 서버 배포 전 — 지금은 앱을 열어둔 동안만 알려드려요</span>`,
+    'ios-needs-install': `<span class="chip">🔔 사파리 공유 → 홈 화면에 추가 후 그 앱에서 켜주세요</span>`,
+    unsupported: `<span class="chip">이 브라우저는 알림을 지원하지 않아요</span>`,
+    denied: `<span class="chip">알림 차단됨 — 브라우저 설정에서 허용</span>`,
+    on: `<button class="btn small ghost" data-share="pushoff">🔔 알림 끄기</button>`,
+    off: `<button class="btn small" data-share="pushon">🔔 코멘트 알림 받기</button>`,
+  }[st]
   el.innerHTML = `<div class="card">
     <div class="rowtop"><span class="pname">👥 ${esc(cloud.trip.name || '우리 여행')}</span>
       <span class="cat mine">함께 쓰는 중</span></div>
     <div class="codebox">초대코드 <b>${esc(cloud.trip.code)}</b>
-      <button class="btn small ghost" data-share="copy">복사</button></div>
+      <button class="btn small ghost" data-share="copycode">코드 복사</button></div>
+    <div class="acts" style="margin-top:8px">
+      <button class="btn small" data-share="invite">🔗 초대링크 보내기</button>
+    </div>
     <p class="pdesc">참여자 ${cloud.members.length}명 · ${esc(names)}<br>나: <b>${esc(cloud.me.name)}</b></p>
     ${cloud.error ? `<p class="pdesc" style="color:var(--bad)">${esc(cloud.error)}</p>` : ''}
     <div class="acts">
-      ${st === 'unsupported'
-        ? `<span class="chip">이 브라우저는 알림 미지원</span>`
-        : st === 'denied'
-          ? `<span class="chip">알림 차단됨 — 브라우저 설정에서 허용</span>`
-          : `<button class="btn small ${st === 'on' ? 'ghost' : ''}" data-share="${st === 'on' ? 'pushoff' : 'pushon'}">${st === 'on' ? '🔔 알림 끄기' : '🔔 코멘트 알림 받기'}</button>`}
+      ${pushUI}
       <button class="btn small danger" data-share="leave">나가기</button>
     </div>
-    <p class="hint">아이폰은 홈 화면에 추가한 뒤에야 알림을 받을 수 있어요.</p>
+    <p class="hint">앱을 열어둔 동안에는 친구가 코멘트를 남기면 화면에 바로 뜹니다.</p>
   </div>`
 }
 
@@ -718,9 +751,23 @@ $('shareBox').addEventListener('click', async e => {
   const act = b.dataset.share
   try {
     if (act === 'create' || act === 'join') { openJoin(act); return }
-    if (act === 'copy') {
+    if (act === 'copycode') {
       await navigator.clipboard.writeText(cloud.trip.code)
       b.textContent = '복사됨 ✓'; return
+    }
+    if (act === 'invite') {
+      const url = inviteUrl()
+      const text = `${cloud.trip.name || '후쿠오카 여행'} 일정 같이 짜자!\n아래 링크로 들어오면 바로 참가돼 (초대코드 ${cloud.trip.code})`
+      // 폰에서는 카톡 등으로 바로 보낼 수 있는 공유 시트를 띄운다
+      if (navigator.share) {
+        try { await navigator.share({ title: '후쿠오카 수첩', text, url }); return } catch (err) {
+          if (err?.name === 'AbortError') return   // 사용자가 취소
+        }
+      }
+      await navigator.clipboard.writeText(`${text}\n${url}`)
+      b.textContent = '링크 복사됨 ✓'
+      toast('초대링크를 복사했어요. 카톡에 붙여넣기 하세요.')
+      return
     }
     if (act === 'pushon') { b.disabled = true; await enablePush() }
     if (act === 'pushoff') { b.disabled = true; await disablePush() }
@@ -734,10 +781,24 @@ $('shareBox').addEventListener('click', async e => {
   renderShare()
 })
 
+/* 초대링크: ?join=코드 로 열면 코드가 채워진 참가 화면이 바로 뜬다 */
+const inviteUrl = () =>
+  `${location.origin}${location.pathname}?join=${encodeURIComponent(cloud.trip.code)}`
+
+function pendingInviteCode() {
+  const m = new URLSearchParams(location.search).get('join')
+  return m ? m.trim().toUpperCase().slice(0, 8) : ''
+}
+function clearInviteParam() {
+  const u = new URL(location.href)
+  u.searchParams.delete('join')
+  history.replaceState(null, '', u.pathname + u.search + u.hash)
+}
+
 /* 참가 다이얼로그 */
 const joinDialog = $('joinDialog')
 let joinMode = 'join'
-function openJoin(mode) {
+function openJoin(mode, code) {
   joinMode = mode
   $('joinTitle').textContent = mode === 'create' ? '여행 만들기' : '초대코드로 참가'
   $('joinHint').textContent = mode === 'create'
@@ -747,7 +808,12 @@ function openJoin(mode) {
   $('jn-go').textContent = mode === 'create' ? '만들기' : '참가하기'
   $('jn-err').textContent = ''
   $('jn-name').value = cloud.me?.name || ''
+  if (code) {
+    $('jn-code').value = code
+    $('joinHint').textContent = `초대코드 ${code} 로 참가합니다. 내 이름만 넣어주세요.`
+  }
   joinDialog.showModal()
+  if (code) $('jn-name').focus()
 }
 $('jn-close').addEventListener('click', () => joinDialog.close())
 $('jn-go').addEventListener('click', async () => {
@@ -760,8 +826,10 @@ $('jn-go').addEventListener('click', async () => {
     if (joinMode === 'create') await createTrip('후쿠오카 여행', name)
     else await joinTrip(code, name)
     joinDialog.close()
+    clearInviteParam()
     await refreshCloud()
     await renderShare()
+    if (joinMode === 'join') { switchTab('plan'); toast('참가했어요! 이제 같은 일정을 봅니다.') }
   } catch (err) {
     $('jn-err').textContent = err.message || String(err)
   } finally {
@@ -999,7 +1067,15 @@ if (cloud.configured) {
     .then(resumeTrip)
     .then(async ok => { if (ok) await refreshCloud() })
     .catch(e => { cloud.error = String(e.message || e) })
-    .finally(renderShare)
+    .finally(async () => {
+      await renderShare()
+      // 초대링크로 들어왔는데 아직 그 여행의 멤버가 아니면 참가 화면을 바로 띄운다
+      const code = pendingInviteCode()
+      if (!code) return
+      if (cloud.active && cloud.trip.code === code) { clearInviteParam(); return }
+      switchTab('more')
+      openJoin('join', code)
+    })
 }
 
 /* PWA: 오프라인 캐시 + 새 버전 자동 반영 */
