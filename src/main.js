@@ -14,7 +14,9 @@ const defaultState = () => ({
   tripStart: '', days: [{ id: 'd1', items: [] }],
   customTips: [], removedTips: [],
   checks: {}, customChecks: [], removedChecks: [],
-  expenses: [], rate: 950,
+  expenses: [],      // 공동 지출 — 여행 참여자 모두에게 공유된다
+  myExpenses: [],    // 개인 지출 — 이 기기에만 남는다 (공유 대상 아님)
+  rate: 950,
 })
 let S = defaultState()
 try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(defaultState(), JSON.parse(raw)) } catch (e) { /* 프라이빗 모드 등 */ }
@@ -872,27 +874,74 @@ const fxJpy = $('fx-jpy'), fxRate = $('fx-rate'), fxKrw = $('fx-krw')
 function fxCalc() { const j = parseFloat(fxJpy.value) || 0; fxKrw.textContent = Math.round(j * (parseFloat(fxRate.value) || 0) / 100).toLocaleString() + '원' }
 fxJpy.addEventListener('input', fxCalc)
 fxRate.addEventListener('input', () => { S.rate = parseFloat(fxRate.value) || 950; save(); fxCalc(); renderExpenses() })
+let expScope = 'shared'
+const expList = () => (expScope === 'shared' ? S.expenses : S.myExpenses)
+
 function renderExpenses() {
+  $('expScope').innerHTML = [['shared', '👥 공동 지출'], ['personal', '🙋 개인 지출']]
+    .map(([k, t]) => `<button class="${k === expScope ? 'on' : ''}" data-x="${k}">${t}</button>`).join('')
+  $('expScopeHint').textContent = expScope === 'shared'
+    ? (cloud.active ? '여행 참여자 모두에게 똑같이 보이고, 누가 냈는지도 함께 기록돼요.'
+                    : '함께 쓰기를 연결하면 이 목록이 친구들과 공유돼요. 지금은 이 기기에만 저장됩니다.')
+    : '나만 보는 지출이에요. 공유되지 않고 이 기기에만 남습니다.'
+
+  const rows = expList()
   const el = $('expList')
-  if (!S.expenses.length) { el.innerHTML = `<div style="color:var(--muted); font-size:13px">아직 기록한 지출이 없어요.</div>`; return }
-  const total = S.expenses.reduce((s, x) => s + x.jpy, 0)
-  el.innerHTML = `<table class="exp"><thead><tr><th>내역</th><th>분류</th><th class="r">¥</th><th class="r">원화</th><th></th></tr></thead><tbody>` +
-    S.expenses.map(x => `<tr><td>${esc(x.desc)}</td><td>${esc(x.cat)}</td><td class="r">${x.jpy.toLocaleString()}</td>
-      <td class="r">${Math.round(x.jpy * S.rate / 100).toLocaleString()}</td>
+  if (!rows.length) {
+    el.innerHTML = `<div style="color:var(--muted); font-size:13px">아직 기록한 ${expScope === 'shared' ? '공동' : '개인'} 지출이 없어요.</div>`
+    return
+  }
+  const total = rows.reduce((s, x) => s + x.jpy, 0)
+  const krw = j => Math.round(j * S.rate / 100).toLocaleString()
+
+  let html = `<table class="exp"><thead><tr><th>내역</th>${expScope === 'shared' ? '<th>낸 사람</th>' : '<th>분류</th>'}<th class="r">¥</th><th class="r">원화</th><th></th></tr></thead><tbody>` +
+    rows.map(x => `<tr><td>${esc(x.desc)}<div class="exsub">${esc(x.cat)}</div></td>
+      ${expScope === 'shared' ? `<td>${esc(x.by || '—')}</td>` : `<td>${esc(x.cat)}</td>`}
+      <td class="r">${x.jpy.toLocaleString()}</td><td class="r">${krw(x.jpy)}</td>
       <td class="r"><button class="rm" data-id="${x.id}">✕</button></td></tr>`).join('') +
     `</tbody></table>
-    <div class="total"><span>합계</span><span>¥${total.toLocaleString()} ≈ ${Math.round(total * S.rate / 100).toLocaleString()}원</span></div>`
+    <div class="total"><span>합계</span><span>¥${total.toLocaleString()} ≈ ${krw(total)}원</span></div>`
+
+  // 공동 지출은 누가 얼마 냈는지와 1인당 분담액까지 보여준다
+  if (expScope === 'shared') {
+    const people = cloud.active ? cloud.members.map(m => m.name) : []
+    const paid = {}
+    for (const x of rows) if (x.by) paid[x.by] = (paid[x.by] || 0) + x.jpy
+    const names = [...new Set([...people, ...Object.keys(paid)])]
+    if (names.length > 1) {
+      const share = Math.round(total / names.length)
+      html += `<div class="settle"><div class="sh">1인당 <b>¥${share.toLocaleString()}</b> ≈ ${krw(share)}원 <span>(${names.length}명 기준)</span></div>` +
+        names.map(n => {
+          const p = paid[n] || 0, diff = p - share
+          return `<div class="srow"><span class="sn">${esc(n)}</span>
+            <span class="sp">낸 돈 ¥${p.toLocaleString()}</span>
+            <span class="sd ${diff >= 0 ? 'plus' : 'minus'}">${diff >= 0 ? `+${diff.toLocaleString()} 받을 돈` : `${Math.abs(diff).toLocaleString()} 낼 돈`}</span></div>`
+        }).join('') + `</div>`
+    }
+  }
+  el.innerHTML = html
 }
+$('expScope').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return
+  expScope = b.dataset.x; renderExpenses()
+})
 $('expList').addEventListener('click', e => {
   const b = e.target.closest('button.rm'); if (!b) return
-  S.expenses = S.expenses.filter(x => x.id !== b.dataset.id); save(); renderExpenses()
+  const id = b.dataset.id
+  if (expScope === 'shared') S.expenses = S.expenses.filter(x => x.id !== id)
+  else S.myExpenses = S.myExpenses.filter(x => x.id !== id)
+  save(); renderExpenses()
 })
 $('expForm').addEventListener('submit', e => {
   e.preventDefault()
   const desc = $('ex-desc').value.trim()
   const jpy = parseFloat($('ex-jpy').value)
   if (!desc || !isFinite(jpy)) return
-  S.expenses.push({ id: uid(), desc, jpy: Math.round(jpy), cat: $('ex-cat').value })
+  const row = { id: uid(), desc, jpy: Math.round(jpy), cat: $('ex-cat').value }
+  if (expScope === 'shared') {
+    if (cloud.active) row.by = cloud.me.name
+    S.expenses.push(row)
+  } else S.myExpenses.push(row)
   $('ex-desc').value = ''; $('ex-jpy').value = ''
   save(); renderExpenses()
 })
