@@ -120,6 +120,7 @@
     <label class="f" for="tripStart" style="margin:0">여행 시작일</label>
     <input type="date" id="tripStart" style="width:auto">
     <button class="btn small ghost" id="addDayBtn">+ 일차 추가</button>
+    <button class="btn small ghost" id="loadPlanBtn">📥 엑셀 일정 불러오기</button>
   </div>
   <div class="daytabs" id="dayTabs"></div>
   <div id="dayView"></div>
@@ -261,6 +262,17 @@
   <div class="acts" style="margin-top:10px">
     <button class="btn small" id="ioAction">복사</button>
     <button class="btn small ghost" id="ioClose">닫기</button>
+  </div>
+</dialog>
+
+<dialog id="planLoadDialog">
+  <h3 style="margin-top:0">엑셀 일정 불러오기</h3>
+  <p class="pdesc" id="pl-hint"></p>
+  <div id="pl-preview" class="plpreview"></div>
+  <div class="acts" style="margin-top:12px">
+    <button class="btn small" data-pl="append">지금 일정 뒤에 추가</button>
+    <button class="btn small danger" data-pl="replace">기존 일정 지우고 교체</button>
+    <button class="btn small ghost" data-pl="cancel">닫기</button>
   </div>
 </dialog>
 

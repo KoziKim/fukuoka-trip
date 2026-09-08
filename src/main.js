@@ -1,5 +1,5 @@
 import './styles.css'
-import { CATS, AIRPORT, ICN, PRESET_FOODS, PRESET_SPOTS, HOTEL_PRESETS, TIPS, TIP_SOURCES, PRESET_CHECKS } from './data.js'
+import { CATS, AIRPORT, ICN, PRESET_FOODS, PRESET_SPOTS, HOTEL_PRESETS, TIPS, TIP_SOURCES, PRESET_CHECKS, PRESET_PLAN } from './data.js'
 import { hav, routes, routeChips, bestSummary } from './transit.js'
 import {
   cloud, initCloud, resumeTrip, createTrip, joinTrip, clearSession, fetchAll, pushState,
@@ -562,6 +562,65 @@ $('pk-save').addEventListener('click', async () => {
   S.days[curDay].items.push(item)
   save(); renderDays()
 })
+/* ───────── 엑셀 일정 불러오기 ───────── */
+/* 엑셀로 짜둔 1~3일차를 지금 보고 있는 여행에 넣는다. 함께 쓰기 중이면 서버에도 올라가 친구들에게 같이 보인다 */
+const planLoadDialog = $('planLoadDialog')
+const planItemCount = () => S.days.reduce((n, d) => n + d.items.length, 0)
+$('loadPlanBtn').addEventListener('click', () => {
+  const n = planItemCount()
+  const total = PRESET_PLAN.days.reduce((a, d) => a + d.length, 0)
+  $('pl-hint').textContent = n
+    ? `엑셀의 ${PRESET_PLAN.days.length}일치 일정 ${total}개를 넣어요. 지금 일정에는 ${n}개 항목이 있어요 — 뒤에 덧붙일지, 지우고 바꿀지 골라주세요.`
+    : `엑셀의 ${PRESET_PLAN.days.length}일치 일정 ${total}개를 넣어요.${cloud.active ? ' 함께 쓰는 친구들에게도 바로 보여요.' : ''}`
+  $('pl-preview').innerHTML = PRESET_PLAN.days.map((items, d) => `<h4>${d + 1}일차</h4>` + items.map(it => {
+    const p = it.placeId ? findPlace(it.placeId) : null
+    return `<div><b>${esc(it.time)}</b><span>${esc(p ? p.name : it.name || '')}</span></div>`
+  }).join('')).join('')
+  planLoadDialog.querySelector('[data-pl="replace"]').hidden = !n
+  planLoadDialog.showModal()
+})
+planLoadDialog.addEventListener('click', async e => {
+  const b = e.target.closest('button[data-pl]'); if (!b) return
+  const mode = b.dataset.pl
+  if (mode === 'cancel') { planLoadDialog.close(); return }
+  if (mode === 'replace' && !confirm(`지금 일정 ${planItemCount()}개를 모두 지우고 엑셀 일정으로 바꿀까요?`)) return
+  planLoadDialog.querySelectorAll('button').forEach(x => { x.disabled = true })
+  try {
+    await applyPresetPlan(mode === 'replace')
+    planLoadDialog.close()
+    curDay = 0
+    save(); renderDays()
+    toast(`📥 엑셀 일정 ${PRESET_PLAN.days.reduce((a, d) => a + d.length, 0)}개를 넣었어요`)
+  } catch (err) {
+    alert('일정을 넣는 중 문제가 생겼어요: ' + (err.message || err))
+    if (cloud.active) refreshCloud()
+  } finally {
+    planLoadDialog.querySelectorAll('button').forEach(x => { x.disabled = false })
+  }
+})
+async function applyPresetPlan(replace) {
+  const days = PRESET_PLAN.days
+  if (replace) {
+    if (cloud.active) {
+      for (const d of S.days) await Promise.all(d.items.map(i => removeItem(i.id)))
+    }
+    for (const d of S.days) d.items = []
+    openComments.clear()
+  }
+  while (S.days.length < days.length) S.days.push({ id: uid(), items: [] })
+  for (let d = 0; d < days.length; d++) {
+    if (cloud.active) {
+      // 순서대로 넣어야 '최근 변경'에도 시간순으로 남는다
+      for (const it of days[d]) {
+        const row = await addItem({ day: d, ...it })
+        S.days[d].items.push(toLocalItem(row))
+      }
+    } else {
+      for (const it of days[d]) S.days[d].items.push({ id: uid(), ...it })
+    }
+  }
+}
+
 function renderDday() {
   const el = $('dday')
   if (!S.tripStart) { el.hidden = true; return }
