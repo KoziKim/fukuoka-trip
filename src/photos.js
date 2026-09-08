@@ -400,11 +400,11 @@ export const PHOTOS = {
   "page": ""
  },
  "f07": {
-  "file": "Sukesan Udon Goboten ac (1).jpg",
-  "artist": "Asturio Cantabrio",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Sukesan_Udon_Goboten_ac_(1).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "우동 타이라.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "f08": {
   "kind": "own",
@@ -694,11 +694,11 @@ export const PHOTOS = {
   "page": ""
  },
  "u32": {
-  "file": "Saizeriya Milano style Doria - 2.jpg",
-  "artist": "KKPCW（Kyu3）",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Saizeriya_Milano_style_Doria_-_2.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "사이제리야 텐진 다이묘점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u41": {
   "kind": "own",
