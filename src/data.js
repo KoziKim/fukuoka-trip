@@ -541,4 +541,45 @@ export const PRESET_PLAN_SOLO_B = {
 }
 PRESET_PLAN.start = TRIP_START
 PRESET_PLAN_V2.start = TRIP_START
-export const PRESET_PLANS = [PRESET_PLAN, PRESET_PLAN_V2, PRESET_PLAN_SOLO_A, PRESET_PLAN_SOLO_B]
+
+/* C — 다른 방향: 바다·야경(모모치) + 악기점 압축 + 마지막 날 계곡 온천 반나절 */
+const DAY3_TAIL_C = [
+  {time:"14:30", placeId:"stay2", memo:"텐진 이동 → 몬토레 라 스루 15:00 체크인. 짐 풀고 20분 쉬기"},
+  {time:"15:45", placeId:"s23", memo:"공항선 텐진 → 토진마치 6분 → 마크이즈 도보 10분"},
+  {time:"16:15", placeId:"s55", memo:"시마무라 악기 마크이즈 모모치점 — 가볍게 워밍업 (30분)"},
+  {time:"17:00", placeId:"s08", memo:"모모치 해변 산책 — 노을 시간대 (60분)"},
+  {time:"18:00", placeId:"s07", memo:"후쿠오카 타워 전망대 ¥1,000 — 노을→야경 한 번에 (60분)"},
+  {time:"19:15", placeId:"s23", memo:"버스 306·305번 등으로 텐진 복귀 (약 20분)"},
+  {time:"20:00", placeId:"u23", memo:"니쿠젠 다이묘 — 야키니쿠 120분 무한리필 (프리미엄 코스 ¥6,770, 23시 마감)"},
+  {time:"22:15", placeId:"stay2", memo:"복귀"},
+]
+const DAY4_C = [ // 14일(월) 악기점 4곳 압축 + 나카스 점심·야쿠인 저녁
+  {time:"09:00", placeId:"u74", memo:"코메다 커피 텐진미나미점 — 모닝 서비스 토스트 (11시까지, 45분)"},
+  {time:"10:15", placeId:"s46", memo:"이시바시 악기 파르코 8층 — 이펙터·중고 (90분)"},
+  {time:"12:00", placeId:"u83", memo:"카와타로 나카스 본점 — 활오징어 정식 런치 ¥4,180 (11:45~14:00, 60분)"},
+  {time:"13:30", placeId:"s48", memo:"BIGBOSS 후쿠오카 — ESP 800대, 나카스에서 도보 15분 (75분)"},
+  {time:"15:00", placeId:"s50", memo:"파인 기타즈 (14시 오픈, 하루요시 3층) — 오버홀 중고·커스텀 페달 (60분)"},
+  {time:"16:15", placeId:"s47", memo:"구로사와 악기 미나텐진 8층 — 빈티지·펜더·깁슨 (90분)"},
+  {time:"18:00", placeId:"s52", memo:"야마하 뮤직 (아크로스 B1) — 18:30 마감, 오늘만 영업 (20분)"},
+  {time:"18:45", placeId:"u33", memo:"토리카와 스이쿄우 야쿠인 본점 — 닭껍질 꼬치 ¥190~ + 맥주 (90분)"},
+  {time:"20:45", placeId:"u46", memo:"우나리 라멘 나카스점 — 마무리 심야 라멘 (18:00~06:00, 40분)"},
+  {time:"22:00", placeId:"stay2", memo:"복귀"},
+]
+const DAY5_C = [ // 15일(화) 계곡 온천 반나절 → 텐진 선물 → 20:30 출발
+  {time:"08:30", placeId:"stay2", memo:"조기 체크아웃, 캐리어 프런트 보관. 수건은 온천에서 대여"},
+  {time:"09:00", placeId:"s23", memo:"니시테츠 후쿠오카(텐진) → 오하시 8분 ¥240 → 오하시역 09:30 무료 순환버스"},
+  {time:"10:00", placeId:"s58", memo:"나카가와 세이류 — 계곡 노천탕·암반욕·식당 점심 (¥1,400 + 타올 ¥400, 3시간 20분). 13:20대 셔틀로 복귀"},
+  {time:"14:00", placeId:"s23", memo:"오하시 → 텐진 복귀"},
+  {time:"14:15", placeId:"s42", memo:"이와타야 지하 식품관 — 선물 (40분)"},
+  {time:"15:00", placeId:"s43", memo:"다이코쿠 드러그 텐진빌딩점 — 면세 (30분)"},
+  {time:"15:45", placeId:"u58", memo:"자크 다이묘점 — 케이크·커피로 마무리 (45분)"},
+  {time:"16:45", placeId:"stay2", memo:"캐리어 회수"},
+  {time:"17:15", placeId:"s23", memo:"텐진역 → 공항선 11분 → 국제선 셔틀 10분"},
+  {time:"18:00", placeId:"airport", memo:"국제선 도착 · 출국 수속 · 20:30 출발"},
+  {time:"22:00", placeId:"icn", memo:"인천 도착"},
+]
+export const PRESET_PLAN_SOLO_C = {
+  name: "V2 + 혼자 14·15일 (C) 바다·온천", start: TRIP_START,
+  days: [PRESET_PLAN_V2.days[0], PRESET_PLAN_V2.days[1], [...day3Solo(PRESET_PLAN_V2.days), ...DAY3_TAIL_C], DAY4_C, DAY5_C],
+}
+export const PRESET_PLANS = [PRESET_PLAN, PRESET_PLAN_V2, PRESET_PLAN_SOLO_A, PRESET_PLAN_SOLO_B, PRESET_PLAN_SOLO_C]
