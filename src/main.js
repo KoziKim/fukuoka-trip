@@ -351,8 +351,9 @@ function renderHotel() {
     <div class="d">${ra && ra.metro ? `국제선→국내선 무료셔틀 약 8분 포함 · ${ra.metro.from}→${ra.metro.to} 하차 후 도보 ${ra.metro.wb}분` : ''}
     ${ra ? ` · 🚕 택시 약 ${ra.taxi.min}분 (약 ¥${ra.taxi.fare.toLocaleString()})` : ''}</div>
   </div>`
-  const rows = [...allFoods().filter(f => f.lat).map(f => ({ p: f, kind: '맛집' })), ...PRESET_SPOTS.map(s => ({ p: s, kind: '명소' }))]
+  const rows = [...allFoods().filter(f => f.lat).map(f => ({ p: f, kind: '맛집' })), ...PRESET_SPOTS.filter(s => s.lat != null).map(s => ({ p: s, kind: '명소' }))]
     .map(x => ({ ...x, r: routes(h, x.p) }))
+    .filter(x => x.r)
     .sort((a, b) => a.r.dKm - b.r.dKm)
   html += `<h3>숙소에서 가까운 순</h3>` + rows.map(x => `
     <div class="card">
