@@ -73,7 +73,10 @@ self.addEventListener('fetch', e => {
     e.respondWith((async () => {
       const hit = await caches.match(req)
       if (hit) return hit
-      const res = await fetch(req)
+      let res = await fetch(req).catch(() => null)
+      // 배포 직후엔 새 index.html이 가리키는 번들을 CDN이 아직 못 줄 때가 있다.
+      // 그 404가 브라우저 HTTP 캐시에 남으면 새로고침해도 계속 실패하니, 캐시를 건너뛰고 다시 받는다.
+      if (!res || !res.ok) res = await fetch(req, { cache: 'reload' })
       if (res && res.ok) (await caches.open(CACHE)).put(req, res.clone())
       return res
     })())

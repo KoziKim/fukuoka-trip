@@ -1650,6 +1650,8 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
 }
 
 $('verText').textContent = `버전 ${BUILD_ID}`
+window.__appReady = true
+document.getElementById('loadFail')?.remove()
 $('verCheck').addEventListener('click', async () => {
   const b = $('verCheck')
   b.disabled = true; b.textContent = '확인 중…'

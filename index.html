@@ -294,6 +294,34 @@
   </div>
 </dialog>
 
+<script>
+  // 앱이 8초 안에 켜지지 않거나 스크립트 로딩이 실패하면 복구 안내를 띄운다.
+  (function () {
+    var shown = false
+    function showFail(why) {
+      if (shown || window.__appReady) return
+      shown = true
+      var el = document.createElement('div')
+      el.id = 'loadFail'
+      el.innerHTML = '<b>앱을 불러오지 못했어요</b><span>' + why + '</span><button type="button">다시 불러오기</button>'
+      el.querySelector('button').addEventListener('click', async function () {
+        this.disabled = true; this.textContent = '불러오는 중…'
+        try {
+          if ('caches' in window) { var ks = await caches.keys(); await Promise.all(ks.map(function (k) { return caches.delete(k) })) }
+          var reg = await (navigator.serviceWorker && navigator.serviceWorker.getRegistration())
+          if (reg) await reg.update()
+        } catch (e) { /* 실패해도 새로고침은 한다 */ }
+        location.reload()
+      })
+      document.body.appendChild(el)
+    }
+    window.addEventListener('error', function (e) {
+      var t = e.target
+      if (t && t.tagName === 'SCRIPT' && t.type === 'module') showFail('새 버전 파일을 아직 받지 못했어요. 잠시 후 다시 시도해 주세요.')
+    }, true)
+    setTimeout(function () { showFail('연결이 느리거나 초기화 중 문제가 생겼어요.') }, 8000)
+  })()
+</script>
 <script type="module" src="./src/main.js"></script>
 </body>
 </html>
