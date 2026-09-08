@@ -1054,13 +1054,6 @@ export const PHOTOS = {
   "page": "https://commons.wikimedia.org/wiki/File:Super_Guitar_Shop_Big_Boss,_Tokyo.jpg",
   "kind": "generic"
  },
- "s49": {
-  "file": "Wall of hollow-body guitars, Guitar Center.jpg",
-  "artist": "Bryan",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Wall_of_hollow-body_guitars,_Guitar_Center.jpg",
-  "kind": "generic"
- },
  "s50": {
   "file": "Pedalboard (995939579)-2.jpg",
   "artist": "Pedalboard_(995939579).jpg: Michael Morel from Barcelona, Sp",
