@@ -1,6 +1,7 @@
 import './styles.css'
-import { CATS, AIRPORT, ICN, PRESET_FOODS, PRESET_SPOTS, HOTEL_PRESETS, TIPS, TIP_SOURCES, PRESET_CHECKS, PRESET_PLAN } from './data.js'
+import { CATS, AIRPORT, ICN, PRESET_FOODS, PRESET_SPOTS, HOTEL_PRESETS, TIPS, TIP_SOURCES, PRESET_CHECKS, PRESET_PLAN, PRESET_PLANS } from './data.js'
 import { hav, routes, routeChips, bestSummary } from './transit.js'
+import { PHOTOS } from './photos.js'
 import {
   cloud, initCloud, resumeTrip, createTrip, joinTrip, clearSession, fetchAll, pushState,
   addItem, updateItem, removeItem, addComment, removeComment,
@@ -109,11 +110,19 @@ function openReview(id) {
   $('rv-title').textContent = p.name
   $('rv-stars').innerHTML = `${starBar(p.rating)}<b>${p.rating.toFixed(1)}</b>`
   const r = p.review || {}
-  $('rv-body').innerHTML =
+  const ph = PHOTOS[p.id]
+  const photo = ph
+    ? `<figure class="rvphoto"><img src="./photos/${p.id}.webp" alt="${esc(p.name)}" loading="lazy" width="480" height="360">
+        <figcaption>사진: <a href="${esc(ph.page)}" target="_blank" rel="noopener">${esc(ph.artist || 'Wikimedia Commons')}</a>${ph.license ? ' · ' + esc(ph.license) : ''}</figcaption></figure>`
+    : ''
+  // 개별 식당 사진은 저작권 때문에 담지 않고, 구글 지도의 사진 탭으로 바로 보낸다
+  const photoLink = `<a class="rvmap" href="${gmap(p.name.replace(/^🏨 /, ''))}" target="_blank" rel="noopener">📷 구글 지도에서 사진 더 보기 ↗</a>`
+  $('rv-body').innerHTML = photo +
     (r.sum ? `<p class="rvsum">${esc(r.sum)}</p>` : '') +
     (r.good ? `<div class="rvrow good"><span class="k">장점</span><span>${esc(r.good)}</span></div>` : '') +
     (r.bad ? `<div class="rvrow bad"><span class="k">단점</span><span>${esc(r.bad)}</span></div>` : '') +
-    (r.note ? `<div class="rvrow"><span class="k">참고</span><span>${esc(r.note)}</span></div>` : '')
+    (r.note ? `<div class="rvrow"><span class="k">참고</span><span>${esc(r.note)}</span></div>` : '') +
+    photoLink
   revDialog.showModal()
 }
 $('rv-close').addEventListener('click', () => revDialog.close())
@@ -567,18 +576,27 @@ $('pk-save').addEventListener('click', async () => {
 /* 엑셀로 짜둔 1~3일차를 지금 보고 있는 여행에 넣는다. 함께 쓰기 중이면 서버에도 올라가 친구들에게 같이 보인다 */
 const planLoadDialog = $('planLoadDialog')
 const planItemCount = () => S.days.reduce((n, d) => n + d.items.length, 0)
-$('loadPlanBtn').addEventListener('click', () => {
+let planChoice = 1 // 기본은 V2
+const chosenPlan = () => PRESET_PLANS[planChoice] || PRESET_PLAN
+function renderPlanLoad() {
+  const plan = chosenPlan()
   const n = planItemCount()
-  const total = PRESET_PLAN.days.reduce((a, d) => a + d.length, 0)
+  const total = plan.days.reduce((a, d) => a + d.length, 0)
+  $('pl-version').innerHTML = PRESET_PLANS.map((p, i) =>
+    `<button type="button" class="${i === planChoice ? 'on' : ''}" data-plv="${i}">${esc(p.name)} · ${p.days.reduce((a, d) => a + d.length, 0)}개</button>`).join('')
   $('pl-hint').textContent = n
-    ? `엑셀의 ${PRESET_PLAN.days.length}일치 일정 ${total}개를 넣어요. 지금 일정에는 ${n}개 항목이 있어요 — 뒤에 덧붙일지, 지우고 바꿀지 골라주세요.`
-    : `엑셀의 ${PRESET_PLAN.days.length}일치 일정 ${total}개를 넣어요.${cloud.active ? ' 함께 쓰는 친구들에게도 바로 보여요.' : ''}`
-  $('pl-preview').innerHTML = PRESET_PLAN.days.map((items, d) => `<h4>${d + 1}일차</h4>` + items.map(it => {
+    ? `${plan.days.length}일치 일정 ${total}개를 넣어요. 지금 일정에는 ${n}개 항목이 있어요 — 뒤에 덧붙일지, 지우고 바꿀지 골라주세요.`
+    : `${plan.days.length}일치 일정 ${total}개를 넣어요.${cloud.active ? ' 함께 쓰는 친구들에게도 바로 보여요.' : ''}`
+  $('pl-preview').innerHTML = plan.days.map((items, d) => `<h4>${d + 1}일차</h4>` + items.map(it => {
     const p = it.placeId ? findPlace(it.placeId) : null
     return `<div><b>${esc(it.time)}</b><span>${esc(p ? p.name : it.name || '')}</span></div>`
   }).join('')).join('')
   planLoadDialog.querySelector('[data-pl="replace"]').hidden = !n
-  planLoadDialog.showModal()
+}
+$('loadPlanBtn').addEventListener('click', () => { renderPlanLoad(); planLoadDialog.showModal() })
+$('pl-version').addEventListener('click', e => {
+  const b = e.target.closest('button[data-plv]'); if (!b) return
+  planChoice = +b.dataset.plv; renderPlanLoad()
 })
 planLoadDialog.addEventListener('click', async e => {
   const b = e.target.closest('button[data-pl]'); if (!b) return
@@ -591,7 +609,7 @@ planLoadDialog.addEventListener('click', async e => {
     planLoadDialog.close()
     curDay = 0
     save(); renderDays()
-    toast(`📥 엑셀 일정 ${PRESET_PLAN.days.reduce((a, d) => a + d.length, 0)}개를 넣었어요`)
+    toast(`📥 ${chosenPlan().name} 일정 ${chosenPlan().days.reduce((a, d) => a + d.length, 0)}개를 넣었어요`)
   } catch (err) {
     alert('일정을 넣는 중 문제가 생겼어요: ' + (err.message || err))
     if (cloud.active) refreshCloud()
@@ -600,7 +618,7 @@ planLoadDialog.addEventListener('click', async e => {
   }
 })
 async function applyPresetPlan(replace) {
-  const days = PRESET_PLAN.days
+  const days = chosenPlan().days
   if (replace) {
     if (cloud.active) {
       for (const d of S.days) await Promise.all(d.items.map(i => removeItem(i.id)))

@@ -392,3 +392,10 @@ a{color:var(--indigo-strong)}
   padding:14px 16px; border-radius:14px; background:var(--surface); border:1px solid var(--line); box-shadow:0 8px 28px rgba(0,0,0,.18); font-size:13.5px}
 #loadFail span{color:var(--muted); font-size:12.5px}
 #loadFail button{align-self:flex-start; margin-top:4px; padding:7px 14px; border-radius:999px; border:1px solid var(--indigo); background:var(--indigo); color:#fff; font-weight:700}
+
+/* 별점 창 사진 */
+.rvphoto{margin:0 0 12px}
+.rvphoto img{display:block; width:100%; height:auto; aspect-ratio:4/3; object-fit:cover; border-radius:12px; background:var(--surface2)}
+.rvphoto figcaption{font-size:11px; color:var(--muted); margin-top:4px}
+.rvphoto figcaption a{color:inherit}
+.rvmap{display:inline-block; margin-top:12px; font-size:13px; font-weight:600; color:var(--indigo-strong)}
