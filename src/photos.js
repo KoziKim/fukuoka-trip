@@ -919,5 +919,19 @@ export const PHOTOS = {
   "license": "CC0",
   "page": "https://commons.wikimedia.org/wiki/File:Gyuu-don_001.jpg",
   "kind": "dish"
+ },
+ "u71": {
+  "file": "Cooking yakitori.jpg",
+  "artist": "竹麦魚(Searobin)",
+  "license": "CC BY-SA 3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Cooking_yakitori.jpg",
+  "kind": "dish"
+ },
+ "u72": {
+  "file": "Cooking yakitori.jpg",
+  "artist": "竹麦魚(Searobin)",
+  "license": "CC BY-SA 3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Cooking_yakitori.jpg",
+  "kind": "dish"
  }
 }
