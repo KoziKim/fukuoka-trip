@@ -1,4 +1,4 @@
-// 자동 생성 — scratchpad/photos.cjs. 장소 id → 사진 출처 (Wikimedia Commons). 파일은 public/photos/<id>.webp
+// 자동 생성 — scripts/add-photos.mjs · 장소 id → 사진 출처. 파일은 public/photos/<id>.webp
 export const PHOTOS = {
  "icn": {
   "file": "02-NOV-2023_-_KC910_ICN-ALA_(EI-KEB_-_B767-300)_(03)_(cropped).jpg",
@@ -13,64 +13,67 @@ export const PHOTOS = {
   "page": "https://commons.wikimedia.org/wiki/File:Fukuoka_Airport_Domestic_Terminal.jpg"
  },
  "f01": {
-  "file": "Tonkotsu Ramen Special, Hakata Choten, Paris 001.jpg",
-  "artist": "Guilhem Vellut from Paris, France",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Tonkotsu_Ramen_Special,_Hakata_Choten,_Paris_001.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "이치란 본점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "f17": {
-  "file": "Seiryū Park Fukuoka Hakata Yatai Nakasu 1-chōme Hakata-ku Fukuoka 20250401 174434.jpg",
-  "artist": "Hirho",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Seiry%C5%AB_Park_Fukuoka_Hakata_Yatai_Nakasu_1-ch%C5%8Dme_Hakata-ku_Fukuoka_20250401_174434.jpg"
+  "kind": "own",
+  "file": "나카스 야타이 거리.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "f10": {
-  "file": "Tempura.jpg",
-  "artist": "PatriceNeff",
-  "license": "CC BY 1.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Tempura.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "텐푸라 히라오 다이묘점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u56": {
-  "file": "Beef and hamburg steak plate served in the restaurant in Koiwai Farm.jpg",
-  "artist": "掬茶",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Beef_and_hamburg_steak_plate_served_in_the_restaurant_in_Koiwai_Farm.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "로얄 호스트 (스미요시점).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u73": {
-  "file": "Beef and hamburg steak plate served in the restaurant in Koiwai Farm.jpg",
-  "artist": "掬茶",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Beef_and_hamburg_steak_plate_served_in_the_restaurant_in_Koiwai_Farm.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "로얄 호스트 (텐진 니시도리점).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u65": {
-  "file": "Komeda Coffee Shironoir Melon & Melon soda.jpg",
-  "artist": "Tokumeigakarinoaoshima",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Komeda_Coffee_Shironoir_Melon_%26_Melon_soda.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "코메다 커피 (하카타 버스터미널점).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u74": {
-  "file": "Komeda Coffee Shironoir Melon & Melon soda.jpg",
-  "artist": "Tokumeigakarinoaoshima",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Komeda_Coffee_Shironoir_Melon_%26_Melon_soda.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "코메다 커피 (후쿠오카 텐진미나미점).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u64": {
-  "file": "Torimon(1).JPG",
-  "artist": "火国男児",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Torimon(1).JPG"
+  "kind": "own",
+  "file": "u64.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u75": {
-  "file": "Torimon(1).JPG",
-  "artist": "火国男児",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Torimon(1).JPG"
+  "kind": "own",
+  "file": "u75.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "s01": {
   "file": "Canalcityhakata2019.jpg",
@@ -259,17 +262,18 @@ export const PHOTOS = {
   "page": "https://commons.wikimedia.org/wiki/File:JR-Hakata-STA_MING-Gate.jpg"
  },
  "u48": {
-  "file": "10pc Gyoza plate.jpg",
-  "artist": "Wesoree",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:10pc_Gyoza_plate.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "교자노 오쇼.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u76": {
-  "file": "Tenjin Iwataya christmas trees.JPG",
-  "artist": "Nissy-KITAQ",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Tenjin_Iwataya_christmas_trees.JPG"
+  "kind": "own",
+  "file": "u76.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "s27": {
   "file": "TOKYU HANDS Shibuya.jpg",
@@ -284,116 +288,116 @@ export const PHOTOS = {
   "page": "https://commons.wikimedia.org/wiki/File:Iwataya_-_Tenjin_Head_Store.JPG"
  },
  "f02": {
-  "file": "Tonkotsu Ramen Special, Hakata Choten, Paris 001.jpg",
-  "artist": "Guilhem Vellut from Paris, France",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Tonkotsu_Ramen_Special,_Hakata_Choten,_Paris_001.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "신신 텐진 본점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "f03": {
-  "file": "Ikkousha tonkotsu bowl.jpg",
-  "artist": "Wesoree",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Ikkousha_tonkotsu_bowl.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "하카타 잇소.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "f04": {
-  "file": "Ikkousha tonkotsu bowl.jpg",
-  "artist": "Wesoree",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Ikkousha_tonkotsu_bowl.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "하카타 다루마 총본점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u17": {
-  "file": "Tonkotsu Ramen - Goemon Ramen Bar 2023-06-06.jpg",
-  "artist": "Andy Li",
-  "license": "CC0",
-  "page": "https://commons.wikimedia.org/wiki/File:Tonkotsu_Ramen_-_Goemon_Ramen_Bar_2023-06-06.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "라멘 부타킨.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u45": {
-  "file": "Tonkotsu Ramen Special, Hakata Choten, Paris 001.jpg",
-  "artist": "Guilhem Vellut from Paris, France",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Tonkotsu_Ramen_Special,_Hakata_Choten,_Paris_001.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "하카타 잇코샤 총본점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u46": {
-  "file": "Ikkousha tonkotsu bowl.jpg",
-  "artist": "Wesoree",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Ikkousha_tonkotsu_bowl.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "우나리 라멘 나카스점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u53": {
-  "file": "Tonkotsu Ramen - Goemon Ramen Bar 2023-06-06.jpg",
-  "artist": "Andy Li",
-  "license": "CC0",
-  "page": "https://commons.wikimedia.org/wiki/File:Tonkotsu_Ramen_-_Goemon_Ramen_Bar_2023-06-06.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "나카스카와바타 키린.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u42": {
-  "file": "Ikkousha tonkotsu bowl.jpg",
-  "artist": "Wesoree",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Ikkousha_tonkotsu_bowl.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "하카타 겐키 잇빠이!!.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u54": {
-  "file": "Iekeiramen111.jpg",
-  "artist": "The original uploader was Hykw-a4 at Japanese Wikipedia.",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Iekeiramen111.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "라멘 우치다야.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u43": {
-  "file": "Ikkousha tonkotsu bowl.jpg",
-  "artist": "Wesoree",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Ikkousha_tonkotsu_bowl.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "츠키야.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u03": {
-  "file": "Tsukemen (Dipping Ramen) - Goemon Ramen Bar 2023-07-16.jpg",
-  "artist": "Andy Li",
-  "license": "CC0",
-  "page": "https://commons.wikimedia.org/wiki/File:Tsukemen_(Dipping_Ramen)_-_Goemon_Ramen_Bar_2023-07-16.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "u03.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "f05": {
-  "file": "Motsunabe.jpg",
-  "artist": "w:ja:利用者:Hykw-a4",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Motsunabe.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "모츠나베 오오야마 KITTE점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "f06": {
-  "file": "Motsunabe.jpg",
-  "artist": "w:ja:利用者:Hykw-a4",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Motsunabe.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "모츠나베 라쿠텐치 텐진본점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u11": {
-  "file": "Motsunabe.jpg",
-  "artist": "w:ja:利用者:Hykw-a4",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Motsunabe.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "모츠나베 토쿠나가야.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u38": {
-  "file": "Motsunabe.jpg",
-  "artist": "w:ja:利用者:Hykw-a4",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Motsunabe.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "하카타 모츠나베 마에다야 하카타점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u39": {
-  "file": "Motsunabe.jpg",
-  "artist": "w:ja:利用者:Hykw-a4",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Motsunabe.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "하카타 모츠나베 야마나카 하카타점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "f07": {
   "file": "Sukesan Udon Goboten ac (1).jpg",
@@ -403,291 +407,291 @@ export const PHOTOS = {
   "kind": "dish"
  },
  "f08": {
-  "file": "Sukesan Udon Goboten ac (1).jpg",
-  "artist": "Asturio Cantabrio",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Sukesan_Udon_Goboten_ac_(1).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "다이치노우동 하카타역앞점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u36": {
-  "file": "Kakesoba of Tachiguisoba.jpg",
-  "artist": "毒島みるく",
-  "license": "CC0",
-  "page": "https://commons.wikimedia.org/wiki/File:Kakesoba_of_Tachiguisoba.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "멘야 미키 하루요시 본점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u84": {
-  "file": "Sukesan Udon Goboten ac (1).jpg",
-  "artist": "Asturio Cantabrio",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Sukesan_Udon_Goboten_ac_(1).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "마키노우동 하카타 버스터미널점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "f11": {
-  "file": "Tempura.jpg",
-  "artist": "PatriceNeff",
-  "license": "CC BY 1.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Tempura.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "하카타 텐푸라 타카오 파르코점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u10": {
-  "file": "Rice bowl topped with shrimp tempura (8281030764).jpg",
-  "artist": "pelican from Tokyo, Japan",
-  "license": "CC BY-SA 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Rice_bowl_topped_with_shrimp_tempura_(8281030764).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "하카타 덴푸라 키스아마루 이마이즈미점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "f12": {
-  "file": "Nigiri Moriawase (Sushi Sei) (42217840971).jpg",
-  "artist": "Asok5 from Budapest, Hungary",
-  "license": "CC BY-SA 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Nigiri_Moriawase_(Sushi_Sei)_(42217840971).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "효탄스시 본점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u01": {
-  "file": "Kaiten sushi (2131921293).jpg",
-  "artist": "Benjamin Hollis from Seattle, WA, USA",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Kaiten_sushi_(2131921293).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "스시로 텐진점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u02": {
-  "file": "Kaiten sushi (2131921293).jpg",
-  "artist": "Benjamin Hollis from Seattle, WA, USA",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Kaiten_sushi_(2131921293).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "겐카이마루.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u15": {
-  "file": "Nigiri Moriawase (Sushi Sei) (42217840971).jpg",
-  "artist": "Asok5 from Budapest, Hungary",
-  "license": "CC BY-SA 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Nigiri_Moriawase_(Sushi_Sei)_(42217840971).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "스시사카바 사시스 (KITTE 하카타점).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u69": {
-  "file": "Nigiri Moriawase (Sushi Sei) (42217840971).jpg",
-  "artist": "Asok5 from Budapest, Hungary",
-  "license": "CC BY-SA 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Nigiri_Moriawase_(Sushi_Sei)_(42217840971).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "스시사카바 사시스 (하카타 마잉점).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u70": {
-  "file": "Nigiri Moriawase (Sushi Sei) (42217840971).jpg",
-  "artist": "Asok5 from Budapest, Hungary",
-  "license": "CC BY-SA 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Nigiri_Moriawase_(Sushi_Sei)_(42217840971).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "스시사카바 사시스 (텐진점).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u85": {
-  "file": "Sake chazuke by matsukawa1971.jpg",
-  "artist": "matsukawa1971",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Sake_chazuke_by_matsukawa1971.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "갓포 요시다 텐진 본점 (타이차즈케).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u49": {
-  "file": "Sake chazuke by matsukawa1971.jpg",
-  "artist": "matsukawa1971",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Sake_chazuke_by_matsukawa1971.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "하카타 타이차야.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "f13": {
-  "file": "Unaju by Kawatoyo Honten.jpg",
-  "artist": "Miyuki Meinaka",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Unaju_by_Kawatoyo_Honten.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "요시즈카 우나기야.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u07": {
-  "file": "ひつまぶし (8866834170).jpg",
-  "artist": "akira yamada from Chigasaki, Japan",
-  "license": "CC BY-SA 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:%E3%81%B2%E3%81%A4%E3%81%BE%E3%81%B6%E3%81%97_(8866834170).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "우나기도코로 야마미치 (山道).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u19": {
-  "file": "Unaju by Kawatoyo Honten.jpg",
-  "artist": "Miyuki Meinaka",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Unaju_by_Kawatoyo_Honten.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "우나기노나루세 와타나베도리.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u37": {
-  "file": "ひつまぶし (8866834170).jpg",
-  "artist": "akira yamada from Chigasaki, Japan",
-  "license": "CC BY-SA 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:%E3%81%B2%E3%81%A4%E3%81%BE%E3%81%B6%E3%81%97_(8866834170).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "스미야키 우나후지 후쿠오카 다이묘 별저.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u44": {
-  "file": "Unaju by Kawatoyo Honten.jpg",
-  "artist": "Miyuki Meinaka",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Unaju_by_Kawatoyo_Honten.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "우나기 토코로 린.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "f14": {
-  "file": "Mentaiko bento.jpg",
-  "artist": "Hajime NAKANO from Tokyo, Japan",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Mentaiko_bento.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "간소 하카타 멘타이쥬.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "f15": {
-  "file": "Fruit parfait Karafuneya.jpg",
-  "artist": "Kykk wiki",
-  "license": "CC0",
-  "page": "https://commons.wikimedia.org/wiki/File:Fruit_parfait_Karafuneya.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "캠벨얼리.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "f16": {
-  "file": "Hearts in latte art, Kraków, Poland, 2023.jpg",
-  "artist": "Kgbo",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Hearts_in_latte_art,_Krak%C3%B3w,_Poland,_2023.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "REC COFFEE 야쿠인역앞점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u87": {
-  "file": "Hearts in latte art, Kraków, Poland, 2023.jpg",
-  "artist": "Kgbo",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Hearts_in_latte_art,_Krak%C3%B3w,_Poland,_2023.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "마누커피 하루요시점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u16": {
-  "file": "Japanese Caramel Custard Pudding, Purin, Flan.jpg",
-  "artist": "Clairenguyen23",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Japanese_Caramel_Custard_Pudding,_Purin,_Flan.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "FUK COFFEE.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u58": {
-  "file": "008 Using plastic pastry bag or piping bag to transfer cupcake dough to silicone baking cups.jpg",
-  "artist": "Marek Ślusarczyk (Tupungato) Photo portfolio",
-  "license": "CC BY 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:008_Using_plastic_pastry_bag_or_piping_bag_to_transfer_cupcake_dough_to_silicone_baking_cups.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "자크 다이묘점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u60": {
-  "file": "Fruit sandwich in Da-cafe, Tokyo 2022-06-29 as(1).jpg",
-  "artist": "Araisyohei",
-  "license": "CC BY 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Fruit_sandwich_in_Da-cafe,_Tokyo_2022-06-29_as(1).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "후르츠가든 신선.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u61": {
-  "file": "Dorayaki 001 (3).jpg",
-  "artist": "Ocdp",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Dorayaki_001_(3).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "이토킹 하카타 잇핀도리점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u63": {
-  "file": "Mochi Ice Cream.jpg",
-  "artist": "Charles Nguyen",
-  "license": "Public domain",
-  "page": "https://commons.wikimedia.org/wiki/File:Mochi_Ice_Cream.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "이몬네 하카타점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u04": {
-  "file": "Okonomiyaki 001.jpg",
-  "artist": "ume-y",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Okonomiyaki_001.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "톤톤톤.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u05": {
-  "file": "Hamburg-Steak.jpg",
-  "artist": "MaedaAkihiko",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Hamburg-Steak.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "히키니쿠토코메.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u18": {
-  "file": "Hamburg-Steak.jpg",
-  "artist": "MaedaAkihiko",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Hamburg-Steak.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "키와미야 함바그 파르코 후쿠오카점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u06": {
-  "file": "Tonkatsu of Kimukatsu.jpg",
-  "artist": "Minseong Kim",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Tonkatsu_of_Kimukatsu.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "돈카츠 요시다.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u14": {
-  "file": "Gyuu-don 001.jpg",
-  "artist": "Ocdp",
-  "license": "CC0",
-  "page": "https://commons.wikimedia.org/wiki/File:Gyuu-don_001.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "요시노야 (하카타 기온점).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u67": {
-  "file": "Gyuu-don 001.jpg",
-  "artist": "Ocdp",
-  "license": "CC0",
-  "page": "https://commons.wikimedia.org/wiki/File:Gyuu-don_001.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "요시노야 (텐진 사잔도리점).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u68": {
-  "file": "Gyuu-don 001.jpg",
-  "artist": "Ocdp",
-  "license": "CC0",
-  "page": "https://commons.wikimedia.org/wiki/File:Gyuu-don_001.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "요시노야 (하카타 데이토스 아넥스점).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u20": {
-  "file": "Mackerel sushi (sabazushi).jpg",
-  "artist": "MemColorLab",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Mackerel_sushi_(sabazushi).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "토로사바·모츠나베 선술집 아킨도 하카타 본점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u23": {
-  "file": "Yakiniku 002.jpg",
-  "artist": "Jonathan Lin",
-  "license": "CC BY-SA 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Yakiniku_002.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "니쿠젠.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u29": {
-  "file": "Yakiniku 002.jpg",
-  "artist": "Jonathan Lin",
-  "license": "CC BY-SA 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Yakiniku_002.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "야키니쿠 카쿠라 니시나카스점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u35": {
-  "file": "Yakiniku 002.jpg",
-  "artist": "Jonathan Lin",
-  "license": "CC BY-SA 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Yakiniku_002.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "야키니쿠 아카탄.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u25": {
-  "file": "Beef and hamburg steak plate served in the restaurant in Koiwai Farm.jpg",
-  "artist": "掬茶",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Beef_and_hamburg_steak_plate_served_in_the_restaurant_in_Koiwai_Farm.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "카페 하르모.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u27": {
-  "file": "St. Regis Singapore Japanese breakfast sets (3504109163).jpg",
-  "artist": "Matt @ PEK from Taipei, Taiwan",
-  "license": "CC BY-SA 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:St._Regis_Singapore_Japanese_breakfast_sets_(3504109163).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "로바타노 이토오카시.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u28": {
-  "file": "St. Regis Singapore Japanese breakfast sets (3504109163).jpg",
-  "artist": "Matt @ PEK from Taipei, Taiwan",
-  "license": "CC BY-SA 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:St._Regis_Singapore_Japanese_breakfast_sets_(3504109163).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "殊代 cotoshiro (코토시로).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u32": {
   "file": "Saizeriya Milano style Doria - 2.jpg",
@@ -697,241 +701,241 @@ export const PHOTOS = {
   "kind": "dish"
  },
  "u41": {
-  "file": "Oden by Mori Chan.jpg",
-  "artist": "Mori Chan",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Oden_by_Mori_Chan.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "나카스 오뎅.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u50": {
-  "file": "Deluxe sashimi platter 01.jpg",
-  "artist": "T.Tseng",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Deluxe_sashimi_platter_01.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "Hakata Nakasu Yu-syokutei.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u51": {
-  "file": "Beef curry rice 003.jpg",
-  "artist": "Ocdp",
-  "license": "CC0",
-  "page": "https://commons.wikimedia.org/wiki/File:Beef_curry_rice_003.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "바쿠레.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u52": {
-  "file": "Curry rice with beef and cheeze of Yoshinoya.jpg",
-  "artist": "Tokumeigakarinoaoshima",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Curry_rice_with_beef_and_cheeze_of_Yoshinoya.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "카레혼포 하카타 본점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u86": {
-  "file": "ごまさば (256930677).jpg",
-  "artist": "ayustety from Tokyo, Japan",
-  "license": "CC BY-SA 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:%E3%81%94%E3%81%BE%E3%81%95%E3%81%B0_(256930677).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "니와카야 초스케 텐진 비즈니스센터점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u78": {
-  "file": "Tonkotsu Ramen - Goemon Ramen Bar 2023-06-06.jpg",
-  "artist": "Andy Li",
-  "license": "CC0",
-  "page": "https://commons.wikimedia.org/wiki/File:Tonkotsu_Ramen_-_Goemon_Ramen_Bar_2023-06-06.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "잇푸도 다이묘 본점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u47": {
-  "file": "Shoyu Ramen with Sushi and Tempura.jpg",
-  "artist": "Miscellaneous contributor",
-  "license": "CC0",
-  "page": "https://commons.wikimedia.org/wiki/File:Shoyu_Ramen_with_Sushi_and_Tempura.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "멘야 잇시 라멘.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "f09": {
-  "file": "Beef Udon dishCNE 01.jpg",
-  "artist": "CNEcija12345",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Beef_Udon_dishCNE_01.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "에비스야 우동.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u09": {
-  "file": "Rice bowl topped with sashimi combo (13807801983).jpg",
-  "artist": "pelican from Tokyo, Japan",
-  "license": "CC BY-SA 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Rice_bowl_topped_with_sashimi_combo_(13807801983).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "하나비 (카이센동).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u34": {
-  "file": "Rice bowl topped with sashimi combo (13807801983).jpg",
-  "artist": "pelican from Tokyo, Japan",
-  "license": "CC BY-SA 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Rice_bowl_topped_with_sashimi_combo_(13807801983).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "우오덴.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u57": {
-  "file": "A bubble tea with tapioca pearls, July 2018.jpg",
-  "artist": "sam651030 from Pixabay",
-  "license": "CC0",
-  "page": "https://commons.wikimedia.org/wiki/File:A_bubble_tea_with_tapioca_pearls,_July_2018.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "티웨이 미나텐진.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u59": {
-  "file": "Fluffy Japanese Pancake - Shibuya (41950827231).jpg",
-  "artist": "Ajay Suresh from New York, NY, USA",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Fluffy_Japanese_Pancake_-_Shibuya_(41950827231).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "카페 델 솔.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u62": {
-  "file": "Milano's Café egg on toast Russell Street Stroud Gloucestershire England.jpg",
-  "artist": "Acabashi",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Milano%27s_Caf%C3%A9_egg_on_toast_Russell_Street_Stroud_Gloucestershire_England.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "빵토 에스프레소토 하카타토.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u08": {
-  "file": "Cooking yakitori.jpg",
-  "artist": "竹麦魚(Searobin)",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Cooking_yakitori.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "타이슈사카바 텐진 다이호루 이마이즈미텐.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u21": {
-  "file": "Japanese set meal with tonkatsu.jpg",
-  "artist": "Betsylavolette",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Japanese_set_meal_with_tonkatsu.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "야요이켄 치쿠시구치점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u82": {
-  "file": "Horumonyaki.jpg",
-  "artist": "Anzai Keisuke",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Horumonyaki.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "텐진 호르몬 KITTE 하카타점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u24": {
-  "file": "Tonkotsu Ramen - Goemon Ramen Bar 2023-06-06.jpg",
-  "artist": "Andy Li",
-  "license": "CC0",
-  "page": "https://commons.wikimedia.org/wiki/File:Tonkotsu_Ramen_-_Goemon_Ramen_Bar_2023-06-06.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "키와미.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u31": {
-  "file": "Mentaiko bento.jpg",
-  "artist": "Hajime NAKANO from Tokyo, Japan",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Mentaiko_bento.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "우오키치.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u30": {
-  "file": "明石鯛 (14487392812).jpg",
-  "artist": "halfrain",
-  "license": "CC BY-SA 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:%E6%98%8E%E7%9F%B3%E9%AF%9B_(14487392812).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "JyuGyoJyuSyoku.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u83": {
-  "file": "Ika somen by woinary in New Chitose Airport.jpg",
-  "artist": "woinary from Restaurant in New Chitose Airport, Chitose, Hok",
-  "license": "CC BY-SA 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Ika_somen_by_woinary_in_New_Chitose_Airport.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "카와타로 나카스 본점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u66": {
-  "file": "Unaju (Grilled eel on rice in box) @ Unatetsu @ Kabukicho (13893953154).jpg",
-  "artist": "Guilhem Vellut from Annecy, France",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Unaju_(Grilled_eel_on_rice_in_box)_@_Unatetsu_@_Kabukicho_(13893953154).jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "우나기도코로 야나가와야 하카타점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u26": {
-  "file": "Cooking yakitori.jpg",
-  "artist": "竹麦魚(Searobin)",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Cooking_yakitori.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "하카타 토리카와야키 구.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u33": {
-  "file": "Cooking yakitori.jpg",
-  "artist": "竹麦魚(Searobin)",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Cooking_yakitori.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "토리카와 스이쿄우.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u55": {
-  "file": "Cooking yakitori.jpg",
-  "artist": "竹麦魚(Searobin)",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Cooking_yakitori.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "카와야 (기온점).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u40": {
-  "file": "Teppanyaki Pepper Pork with Vegetables, Rice and Miso Soup 20180404.jpg",
-  "artist": "玄史生",
-  "license": "CC0",
-  "page": "https://commons.wikimedia.org/wiki/File:Teppanyaki_Pepper_Pork_with_Vegetables,_Rice_and_Miso_Soup_20180404.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "스타미나 철판 하카타 아이언맨 하카타점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u81": {
-  "file": "Yakitori 001.jpg",
-  "artist": "Ocdp",
-  "license": "CC0",
-  "page": "https://commons.wikimedia.org/wiki/File:Yakitori_001.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "네지케몬 (야채말이 꼬치) 다이묘.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u79": {
-  "file": "Tonkotsu Ramen Special, Hakata Choten, Paris 001.jpg",
-  "artist": "Guilhem Vellut from Paris, France",
-  "license": "CC BY 2.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Tonkotsu_Ramen_Special,_Hakata_Choten,_Paris_001.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "간소 나가하마야.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u13": {
-  "file": "Teppanyaki-Steak.jpg",
-  "artist": "Pilzland",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Teppanyaki-Steak.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "텟판야키 리카엔.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u80": {
-  "file": "10pc Gyoza plate.jpg",
-  "artist": "Wesoree",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:10pc_Gyoza_plate.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "테츠나베 나카스 본점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u22": {
-  "file": "Tonkatsu of Kimukatsu.jpg",
-  "artist": "Minseong Kim",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Tonkatsu_of_Kimukatsu.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "모토무라 규카츠 (텐진 니시도리점).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u77": {
-  "file": "Tonkatsu of Kimukatsu.jpg",
-  "artist": "Minseong Kim",
-  "license": "CC BY-SA 4.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Tonkatsu_of_Kimukatsu.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "모토무라 규카츠 (후쿠오카 파르코점).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u12": {
-  "file": "Gyuu-don 001.jpg",
-  "artist": "Ocdp",
-  "license": "CC0",
-  "page": "https://commons.wikimedia.org/wiki/File:Gyuu-don_001.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "하카타규 마부시 무사시.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
  "u71": {
-  "file": "Cooking yakitori.jpg",
-  "artist": "竹麦魚(Searobin)",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Cooking_yakitori.jpg",
-  "kind": "dish"
+  "kind": "own",
+  "file": "카와야 (케고점).png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  },
- "u72": {
-  "file": "Cooking yakitori.jpg",
-  "artist": "竹麦魚(Searobin)",
-  "license": "CC BY-SA 3.0",
-  "page": "https://commons.wikimedia.org/wiki/File:Cooking_yakitori.jpg",
-  "kind": "dish"
+ "u88": {
+  "kind": "own",
+  "file": "멘야 카네토라 하카타 데이토스점.png",
+  "artist": "우리가 넣은 사진",
+  "license": "",
+  "page": ""
  }
 }

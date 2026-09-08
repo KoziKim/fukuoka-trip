@@ -30,6 +30,12 @@ export function writeCredits(credits) {
     'export const PHOTOS = ' + JSON.stringify(credits, null, 1) + '\n')
 }
 
+/** 괄호 안 지점명까지 살린 비교용 — '카와야 (기온점)' 처럼 지점을 적어준 파일 이름은 이걸로 먼저 정확히 맞춘다 */
+export const normFull = s => String(s || '')
+  .replace(/[\s·・,.\-–—_'"!?!？~〜\/\\()（）]+/g, '')
+  .replace(/[🏨📍]/g, '')
+  .toLowerCase()
+
 /** 이름 비교용 — 공백·괄호·기호·이모지를 걷어내고 소문자로 */
 export const norm = s => String(s || '')
   .replace(/\([^)]*\)/g, '')
@@ -47,6 +53,8 @@ export function matchPlace(basename, places) {
   const key = basename.replace(/\.[^.]+$/, '').trim()
   const byId = places.find(p => p.id === key)
   if (byId) return { place: byId }
+  const full = places.filter(p => normFull(p.name) === normFull(key))
+  if (full.length === 1) return { place: full[0] }
   const n = norm(key)
   if (!n) return {}
   const exact = places.filter(p => norm(p.name) === n)
