@@ -1,4 +1,4 @@
-// 자동 생성 — scripts/add-photos.mjs · 장소 id → 사진 출처. 파일은 public/photos/<id>.webp
+// 자동 생성 — scratchpad/photos.cjs. 장소 id → 사진 출처 (Wikimedia Commons). 파일은 public/photos/<id>.webp
 export const PHOTOS = {
  "icn": {
   "file": "02-NOV-2023_-_KC910_ICN-ALA_(EI-KEB_-_B767-300)_(03)_(cropped).jpg",
@@ -937,5 +937,107 @@ export const PHOTOS = {
   "artist": "우리가 넣은 사진",
   "license": "",
   "page": ""
+ },
+ "stay1": {
+  "file": "Hakata Exit Station Square S from Hakata Station Pedestrian Bridge 20230725.jpg",
+  "artist": "Hirho",
+  "license": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Hakata_Exit_Station_Square_S_from_Hakata_Station_Pedestrian_Bridge_20230725.jpg",
+  "kind": "generic"
+ },
+ "stay2": {
+  "file": "Hotel Monterey La Soeur Fukuoka.jpg",
+  "artist": "STA3816",
+  "license": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Hotel_Monterey_La_Soeur_Fukuoka.jpg"
+ },
+ "s17": {
+  "file": "AEON Shoppers Fukuoka Shop.JPG",
+  "artist": "Jojimuke",
+  "license": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:AEON_Shoppers_Fukuoka_Shop.JPG"
+ },
+ "s24": {
+  "file": "CAFFE-VELOCE logo.png",
+  "artist": "Matthide127",
+  "license": "CC0",
+  "page": "https://commons.wikimedia.org/wiki/File:CAFFE-VELOCE_logo.png",
+  "kind": "generic"
+ },
+ "s28": {
+  "file": "BON REPAS Momochi store.jpg",
+  "artist": "Momotarou2012",
+  "license": "CC BY-SA 3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:BON_REPAS_Momochi_store.jpg",
+  "kind": "generic"
+ },
+ "s19": {
+  "file": "Ｖarious sushi.jpg",
+  "artist": "Marcel Montes",
+  "license": "CC BY-SA 3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:%EF%BC%B6arious_sushi.jpg",
+  "kind": "generic"
+ },
+ "s29": {
+  "file": "Shintencho Tenjin Fukuoka Jpn 01.jpg",
+  "artist": "ja:User:Sanjo",
+  "license": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Shintencho_Tenjin_Fukuoka_Jpn_01.jpg",
+  "kind": "generic"
+ },
+ "s31": {
+  "file": "Shintencho Tenjin Fukuoka Jpn 01.jpg",
+  "artist": "ja:User:Sanjo",
+  "license": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Shintencho_Tenjin_Fukuoka_Jpn_01.jpg",
+  "kind": "generic"
+ },
+ "s32": {
+  "file": "Shintencho Tenjin Fukuoka Jpn 01.jpg",
+  "artist": "ja:User:Sanjo",
+  "license": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:Shintencho_Tenjin_Fukuoka_Jpn_01.jpg",
+  "kind": "generic"
+ },
+ "s35": {
+  "file": "Tenjin-nishi Dōri the ENE view from Kon-ya-machi Shōji Tenjin 2-chōme Chūō-ku Fukuoka 20231114.jpg",
+  "artist": "Hirho",
+  "license": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Tenjin-nishi_D%C5%8Dri_the_ENE_view_from_Kon-ya-machi_Sh%C5%8Dji_Tenjin_2-ch%C5%8Dme_Ch%C5%AB%C5%8D-ku_Fukuoka_20231114.jpg",
+  "kind": "generic"
+ },
+ "s33": {
+  "file": "ゲオのロゴ.jpg",
+  "artist": "Unknown authorUnknown author",
+  "license": "Public domain",
+  "page": "https://commons.wikimedia.org/wiki/File:%E3%82%B2%E3%82%AA%E3%81%AE%E3%83%AD%E3%82%B4.jpg",
+  "kind": "generic"
+ },
+ "s45": {
+  "file": "Yodobashi Hakata Parking the SW side 6-12 Hakata-eki-chūōgai Hakata-ku Fukuoka 20230811.jpg",
+  "artist": "Hirho",
+  "license": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Yodobashi_Hakata_Parking_the_SW_side_6-12_Hakata-eki-ch%C5%AB%C5%8Dgai_Hakata-ku_Fukuoka_20230811.jpg"
+ },
+ "w01": {
+  "file": "Angela Wedding Chapel (5851422880).jpg",
+  "artist": "Ray Larabie from Nagoya, Japan, Japan",
+  "license": "CC BY 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Angela_Wedding_Chapel_(5851422880).jpg",
+  "kind": "generic"
+ },
+ "s26": {
+  "file": "Tachikawa liquor shop (48978390437).jpg",
+  "artist": "Real Estate Japan from Tokyo, Japan",
+  "license": "CC BY 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Tachikawa_liquor_shop_(48978390437).jpg",
+  "kind": "generic"
+ },
+ "s11": {
+  "file": "Hyundai Citystore Fukuoka in Lalaport Fukuoka.jpg",
+  "artist": "Kalmarle",
+  "license": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Hyundai_Citystore_Fukuoka_in_Lalaport_Fukuoka.jpg",
+  "kind": "generic"
  }
 }
