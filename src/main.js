@@ -642,7 +642,10 @@ planLoadDialog.addEventListener('click', async e => {
   }
 })
 async function applyPresetPlan(replace) {
-  const days = chosenPlan().days
+  const plan = chosenPlan()
+  const days = plan.days
+  // 일정에 날짜가 붙어 있으면 여행 시작일도 채워준다 (이미 정해둔 값은 건드리지 않는다)
+  if (plan.start && !S.tripStart) S.tripStart = plan.start
   if (replace) {
     if (cloud.active) {
       for (const d of S.days) await Promise.all(d.items.map(i => removeItem(i.id)))

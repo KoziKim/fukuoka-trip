@@ -1039,5 +1039,75 @@ export const PHOTOS = {
   "license": "CC BY-SA 4.0",
   "page": "https://commons.wikimedia.org/wiki/File:Hyundai_Citystore_Fukuoka_in_Lalaport_Fukuoka.jpg",
   "kind": "generic"
+ },
+ "s47": {
+  "file": "Mandolins at Kurosawa Music Store（Ochanomizu）.jpg",
+  "artist": "Richie Johns",
+  "license": "CC BY 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Mandolins_at_Kurosawa_Music_Store%EF%BC%88Ochanomizu%EF%BC%89.jpg",
+  "kind": "generic"
+ },
+ "s48": {
+  "file": "Super Guitar Shop Big Boss, Tokyo.jpg",
+  "artist": "ElCapitanBSC",
+  "license": "CC BY-SA 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Super_Guitar_Shop_Big_Boss,_Tokyo.jpg",
+  "kind": "generic"
+ },
+ "s49": {
+  "file": "Wall of hollow-body guitars, Guitar Center.jpg",
+  "artist": "Bryan",
+  "license": "CC BY 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Wall_of_hollow-body_guitars,_Guitar_Center.jpg",
+  "kind": "generic"
+ },
+ "s50": {
+  "file": "Pedalboard (995939579)-2.jpg",
+  "artist": "Pedalboard_(995939579).jpg: Michael Morel from Barcelona, Sp",
+  "license": "CC BY 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Pedalboard_(995939579)-2.jpg",
+  "kind": "generic"
+ },
+ "s53": {
+  "file": "Hard Off Kadoma.jpg",
+  "artist": "Mr.ちゅらさん",
+  "license": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Hard_Off_Kadoma.jpg",
+  "kind": "generic"
+ },
+ "s54": {
+  "file": "Lillo's Music Store rare guitar collection (47926492931).jpg",
+  "artist": "sf-dvs",
+  "license": "CC BY 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Lillo%27s_Music_Store_rare_guitar_collection_(47926492931).jpg",
+  "kind": "generic"
+ },
+ "s55": {
+  "file": "MARK IS fukuoka-momochi 20181124.jpg",
+  "artist": "新幹線",
+  "license": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:MARK_IS_fukuoka-momochi_20181124.jpg",
+  "kind": "generic"
+ },
+ "s46": {
+  "file": "Richard Turner - Redbone Guitar Boutique, 2008-08-12.jpg",
+  "artist": "H. Michael Karshis from San Antonio, USA",
+  "license": "CC BY 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Richard_Turner_-_Redbone_Guitar_Boutique,_2008-08-12.jpg",
+  "kind": "generic"
+ },
+ "s51": {
+  "file": "Zemaitis Music Store, other brand guitars, Ochanomizu Gakki Center, Tokyo.jpg",
+  "artist": "Richie Johns",
+  "license": "CC BY 2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Zemaitis_Music_Store,_other_brand_guitars,_Ochanomizu_Gakki_Center,_Tokyo.jpg",
+  "kind": "generic"
+ },
+ "s52": {
+  "file": "12 string Yamaha acoustic guitar.jpg",
+  "artist": "Peternick2468",
+  "license": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:12_string_Yamaha_acoustic_guitar.jpg",
+  "kind": "generic"
  }
 }
