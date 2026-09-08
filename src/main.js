@@ -113,7 +113,7 @@ function openReview(id) {
   const ph = PHOTOS[p.id]
   const photo = ph
     ? `<figure class="rvphoto"><img src="./photos/${p.id}.webp" alt="${esc(p.name)}" loading="lazy" width="480" height="360">
-        <figcaption>사진: <a href="${esc(ph.page)}" target="_blank" rel="noopener">${esc(ph.artist || 'Wikimedia Commons')}</a>${ph.license ? ' · ' + esc(ph.license) : ''}</figcaption></figure>`
+        <figcaption>${ph.kind === 'dish' ? '대표 메뉴 예시 (이 가게 사진은 아님) · ' : ''}사진: <a href="${esc(ph.page)}" target="_blank" rel="noopener">${esc(ph.artist || 'Wikimedia Commons')}</a>${ph.license ? ' · ' + esc(ph.license) : ''}</figcaption></figure>`
     : ''
   // 개별 식당 사진은 저작권 때문에 담지 않고, 구글 지도의 사진 탭으로 바로 보낸다
   const photoLink = `<a class="rvmap" href="${gmap(p.name.replace(/^🏨 /, ''))}" target="_blank" rel="noopener">📷 구글 지도에서 사진 더 보기 ↗</a>`
