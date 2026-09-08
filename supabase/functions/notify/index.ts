@@ -40,18 +40,16 @@ Deno.serve(async (req) => {
 
     const { data: comment, error } = await db
       .from('comments')
-      .select('id, trip_id, item_id, member_id, author, body')
+      .select('id, trip_id, item_id, place_id, target_label, member_id, author, body')
       .eq('id', comment_id)
       .single()
     if (error || !comment) return json({ error: 'comment not found' }, 404)
 
-    // 어떤 일정에 달린 코멘트인지 제목에 넣어준다
-    const { data: item } = await db
-      .from('plan_items')
-      .select('at, name, place_id')
-      .eq('id', comment.item_id)
-      .single()
-    const where = item?.name || item?.place_id || '일정'
+    // 어떤 일정·장소에 달린 코멘트인지 제목에 넣어준다 (장소 코멘트는 item_id 가 없다)
+    const { data: item } = comment.item_id
+      ? await db.from('plan_items').select('at, name, place_id').eq('id', comment.item_id).single()
+      : { data: null }
+    const where = item?.name || item?.place_id || comment.target_label || comment.place_id || '일정'
     const title = `${comment.author}님의 코멘트`
     const body = `${item?.at ? item.at + ' ' : ''}${where} · ${comment.body}`
 
@@ -64,7 +62,7 @@ Deno.serve(async (req) => {
 
     if (!subs?.length) return json({ sent: 0 })
 
-    const payload = JSON.stringify({ title, body, url: APP_URL, tag: `comment-${comment.item_id}` })
+    const payload = JSON.stringify({ title, body, url: APP_URL, tag: `comment-${comment.item_id || comment.place_id}` })
     const stale: string[] = []
 
     const results = await Promise.allSettled(

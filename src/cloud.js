@@ -118,7 +118,7 @@ export async function duplicateTrip(newName) {
   const [trip, items, comments] = await Promise.all([
     sb.from('trips').select('state').eq('id', src).single(),
     sb.from('plan_items').select('id, day, at, place_id, name, memo').eq('trip_id', src).order('day').order('at').order('created_at'),
-    sb.from('comments').select('item_id, author, body').eq('trip_id', src).order('created_at'),
+    sb.from('comments').select('item_id, place_id, target_label, author, body').eq('trip_id', src).order('created_at'),
   ])
   if (trip.error) throw trip.error
 
@@ -145,7 +145,7 @@ export async function duplicateTrip(newName) {
     const idMap = {}
     srcItems.forEach((it, n) => { if (newItems[n]) idMap[it.id] = newItems[n].id })
 
-    const srcComments = (comments.data || []).filter(c => idMap[c.item_id])
+    const srcComments = (comments.data || []).filter(c => c.item_id && idMap[c.item_id])
     if (srcComments.length) {
       const { error: cErr } = await sb.from('comments').insert(
         srcComments.map(c => ({
@@ -155,6 +155,17 @@ export async function duplicateTrip(newName) {
       )
       if (cErr) throw cErr
     }
+  }
+  // 장소(맛집·명소) 코멘트는 일정과 무관하니 그대로 옮긴다
+  const placeComments = (comments.data || []).filter(c => !c.item_id && c.place_id)
+  if (placeComments.length) {
+    const { error: pErr } = await sb.from('comments').insert(
+      placeComments.map(c => ({
+        trip_id: dst, place_id: c.place_id, target_label: c.target_label, member_id: null,
+        author: c.author, body: c.body,
+      })),
+    )
+    if (pErr) throw pErr
   }
   return { tripId: dst, code: row.trip_code, name: newName, memberId: row.member_id, myName: cloud.me.name }
 }
@@ -258,10 +269,13 @@ export async function removeItem(id) {
   const { error } = await sb.from('plan_items').delete().eq('id', id)
   if (error) throw error
 }
-export async function addComment(itemId, body) {
+/** target: 일정 id 문자열, 또는 { placeId, label } (맛집·명소 코멘트) */
+export async function addComment(target, body) {
+  const t = typeof target === 'string' ? { itemId: target } : target
   const { data, error } = await sb.from('comments').insert({
-    trip_id: cloud.trip.id, item_id: itemId, member_id: cloud.me.memberId,
-    author: cloud.me.name, body,
+    trip_id: cloud.trip.id, item_id: t.itemId || null,
+    place_id: t.placeId || null, target_label: t.label || null,
+    member_id: cloud.me.memberId, author: cloud.me.name, body,
   }).select().single()
   if (error) throw error
   return data

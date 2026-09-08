@@ -399,3 +399,6 @@ a{color:var(--indigo-strong)}
 .rvphoto figcaption{font-size:11px; color:var(--muted); margin-top:4px}
 .rvphoto figcaption a{color:inherit}
 .rvmap{display:inline-block; margin-top:12px; font-size:13px; font-weight:600; color:var(--indigo-strong)}
+
+/* 장소 카드의 코멘트 버튼 */
+.acts .cmbtn.on{color:var(--indigo-strong); border-color:var(--indigo); background:var(--indigo-soft)}

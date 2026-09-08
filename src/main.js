@@ -231,13 +231,37 @@ function renderFoods() {
         <a href="${gmap(f.name)}" target="_blank" rel="noopener">지도 ↗</a>
         ${f.id.startsWith('x') ? `<button data-act="edit" data-id="${f.id}">수정</button>` : ''}
         <button data-act="del" data-id="${f.id}">삭제</button>
+        ${cloud.active ? `<button class="cmbtn ${openPlaceComments.has(f.id) ? 'on' : ''}" data-act="cm" data-id="${f.id}">💬 ${(placeComments[f.id] || []).length || ''}</button>` : ''}
       </div>
+      ${cloud.active && openPlaceComments.has(f.id) ? commentPanel(f.id, placeComments[f.id] || [], `data-cmplace="${f.id}"`) : ''}
     </div>`
   }).join('')
 }
+/* 장소 코멘트 등록 / 삭제 — 일정 코멘트와 같은 표를 쓰고 place_id 로만 구분한다 */
+$('foodList').addEventListener('submit', async e => {
+  const f = e.target.closest('form[data-cmplace]'); if (!f) return
+  e.preventDefault()
+  const input = f.elements.body
+  const body = input.value.trim()
+  if (!body) return
+  const place = findPlace(f.dataset.cmplace)
+  input.value = ''
+  try { await addComment({ placeId: f.dataset.cmplace, label: place?.name }, body); await refreshCloud() }
+  catch (err) { alert(err.message || String(err)); input.value = body }
+})
+$('foodList').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-cmdel]'); if (!b) return
+  if (!confirm('코멘트를 삭제할까요?')) return
+  try { await removeComment(b.dataset.cmdel); await refreshCloud() }
+  catch (err) { alert(err.message || String(err)) }
+})
 $('foodList').addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b) return
+  const b = e.target.closest('button'); if (!b || !b.dataset.act) return   // 코멘트 폼의 버튼은 여기서 다루지 않는다
   const id = b.dataset.id, act = b.dataset.act
+  if (act === 'cm') {
+    openPlaceComments.has(id) ? openPlaceComments.delete(id) : openPlaceComments.add(id)
+    renderFoods(); return
+  }
   if (act === 'fav' || act === 'visited') {
     const m = S.foodMeta[id] = S.foodMeta[id] || {}
     const k = act === 'fav' ? 'fav' : 'visited'
@@ -759,8 +783,10 @@ $('nearbyWrap').addEventListener('click', e => {
 })
 
 /* ───────── 함께 쓰기 (Supabase) ───────── */
-let cloudComments = {}
+let cloudComments = {}      // 일정 id → 코멘트들
+let placeComments = {}      // 장소 id → 코멘트들 (맛집·명소)
 const openComments = new Set()
+const openPlaceComments = new Set()
 let refreshTimer = null
 
 const toLocalItem = r => ({
@@ -791,8 +817,11 @@ async function refreshCloud() {
     S.days = Array.from({ length: dayCount }, (_, d) => ({
       id: 'd' + d, items: data.items.filter(i => i.day === d).map(toLocalItem),
     }))
-    cloudComments = {}
-    for (const c of data.comments) (cloudComments[c.item_id] ||= []).push(c)
+    cloudComments = {}; placeComments = {}
+    for (const c of data.comments) {
+      if (c.item_id) (cloudComments[c.item_id] ||= []).push(c)
+      else if (c.place_id) (placeComments[c.place_id] ||= []).push(c)
+    }
     cloudActivity = data.activity || []
     try { localStorage.setItem(KEY, JSON.stringify(S)) } catch (e) { /* ignore */ }
     renderAll()
@@ -839,6 +868,7 @@ const ACT_LABEL = {
   item_edit: ['✎', '일정 수정'],
   item_del: ['−', '일정 삭제'],
   comment: ['💬', '코멘트'],
+  place_comment: ['💬', '장소 코멘트'],
 }
 function renderActivity() {
   const el = $('activityWrap')
@@ -867,8 +897,7 @@ $('activityWrap').addEventListener('click', e => {
   renderActivity()
 })
 
-function commentPanel(itemId) {
-  const list = cloudComments[itemId] || []
+function commentPanel(itemId, list = cloudComments[itemId] || [], formAttr = `data-cmadd="${itemId}"`) {
   const mine = cloud.me?.memberId
   return `<div class="cmpanel">
     ${list.length ? list.map(c => `<div class="cm">
@@ -876,7 +905,7 @@ function commentPanel(itemId) {
         ${c.member_id === mine ? `<button class="cmdel" data-cmdel="${c.id}" aria-label="코멘트 삭제">✕</button>` : ''}</div>
       <div class="cmbody">${esc(c.body)}</div>
     </div>`).join('') : `<div class="cmempty">아직 코멘트가 없어요.</div>`}
-    <form class="cmform" data-cmadd="${itemId}">
+    <form class="cmform" ${formAttr}>
       <input name="body" placeholder="코멘트 남기기" maxlength="200" autocomplete="off">
       <button class="btn small" type="submit">등록</button>
     </form>

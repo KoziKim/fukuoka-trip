@@ -42,13 +42,17 @@ create index if not exists plan_items_trip_idx on public.plan_items(trip_id, day
 create table if not exists public.comments (
   id          uuid primary key default gen_random_uuid(),
   trip_id     uuid not null references public.trips(id) on delete cascade,
-  item_id     uuid not null references public.plan_items(id) on delete cascade,
+  item_id     uuid references public.plan_items(id) on delete cascade,   -- 일정 코멘트
+  place_id    text,                                                        -- 장소(맛집·명소) 코멘트 — 앱의 장소 id
+  target_label text,                                                       -- 장소 이름 (알림·이력용)
   member_id   uuid references public.members(id) on delete set null,
   author      text not null,
   body        text not null,
-  created_at  timestamptz not null default now()
+  created_at  timestamptz not null default now(),
+  constraint comments_target_chk check (item_id is not null or place_id is not null)
 );
 create index if not exists comments_item_idx on public.comments(item_id, created_at);
+create index if not exists comments_place_idx on public.comments(trip_id, place_id, created_at);
 
 create table if not exists public.push_subs (
   id          uuid primary key default gen_random_uuid(),
