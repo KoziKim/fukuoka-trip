@@ -1102,5 +1102,26 @@ export const PHOTOS = {
   "license": "CC BY-SA 4.0",
   "page": "https://commons.wikimedia.org/wiki/File:12_string_Yamaha_acoustic_guitar.jpg",
   "kind": "generic"
+ },
+ "s56": {
+  "file": "Bayside Place Hakata Wharf and Hakata Port Tower at night.jpg",
+  "artist": "STA3816",
+  "license": "CC BY-SA 3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Bayside_Place_Hakata_Wharf_and_Hakata_Port_Tower_at_night.jpg",
+  "kind": "generic"
+ },
+ "s57": {
+  "file": "Fukuoka Prefectural Road 7 near Futsukaichi Onsen Iriguchi Intersection.jpg",
+  "artist": "STA3816",
+  "license": "CC BY-SA 4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Fukuoka_Prefectural_Road_7_near_Futsukaichi_Onsen_Iriguchi_Intersection.jpg",
+  "kind": "generic"
+ },
+ "s58": {
+  "file": "Takanoyu Onsen Rotenburo 003.JPG",
+  "artist": "RickardA",
+  "license": "CC0",
+  "page": "https://commons.wikimedia.org/wiki/File:Takanoyu_Onsen_Rotenburo_003.JPG",
+  "kind": "generic"
  }
 }
