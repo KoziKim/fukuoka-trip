@@ -3,3 +3,5 @@ dist/
 .DS_Store
 *.local
 supabase/.temp/
+photos-inbox/*
+!photos-inbox/사진목록.html

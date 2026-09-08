@@ -6,9 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "photos": "node scripts/add-photos.mjs",
+    "photos:list": "node scripts/photo-list.mjs"
   },
   "devDependencies": {
+    "sharp": "^0.33.5",
     "vite": "^7.1.0"
   },
   "dependencies": {
