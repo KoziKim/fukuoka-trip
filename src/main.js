@@ -15,7 +15,7 @@ const defaultState = () => ({
   hotel: null, customFoods: [], foodMeta: {}, hiddenFoods: [],
   tripStart: '', days: [{ id: 'd1', items: [] }],
   customTips: [], removedTips: [],
-  checks: {}, customChecks: [], removedChecks: [],
+  checks: {}, customChecks: [], removedChecks: [], showSolo: false,
   expenses: [],      // 공동 지출 — 여행 참여자 모두에게 공유된다
   myExpenses: [],    // 개인 지출 — 이 기기에만 남는다 (공유 대상 아님)
   rate: 860,
@@ -29,8 +29,10 @@ if (!S.rateMigrated) {
   S.rateMigrated = true
 }
 /* 공유 상태로 올릴 항목 — 일정(plan_items)과 코멘트는 별도 테이블이라 여기 넣지 않는다 */
+/* 준비물 체크리스트(checks·customChecks·removedChecks)는 공유하지 않는다.
+   짐은 사람마다 다르고, 남이 체크한 게 내 화면에 넘어오면 안 된다. 이 기기 localStorage 에만 남는다. */
 const SHARED_KEYS = ['hotel', 'customFoods', 'foodMeta', 'hiddenFoods', 'customTips', 'removedTips',
-  'checks', 'customChecks', 'removedChecks', 'expenses', 'rate', 'tripStart', 'dayCount']
+  'expenses', 'rate', 'tripStart', 'dayCount']
 function sharedState() {
   const o = {}
   for (const k of SHARED_KEYS) o[k] = k === 'dayCount' ? S.days.length : S[k]
@@ -1332,14 +1334,15 @@ $('installBox').addEventListener('click', async e => {
 
 /* ───────── 꿀팁 탭 ───────── */
 /* 항목은 "문자열" 또는 { t, pri } 형태 — pri 1=필수, 2=중요, 없으면 일반 */
-const normEntry = x => (typeof x === 'string' ? { t: x, pri: 0 } : { t: x.t, pri: x.pri || 0 })
+const normEntry = x => (typeof x === 'string' ? { t: x, pri: 0, solo: false } : { t: x.t, pri: x.pri || 0, solo: !!x.solo })
 /* 체크/삭제 상태의 키는 내용에서 뽑는다. 목록 순서가 바뀌어도 엉뚱한 항목에 붙지 않는다 */
 function textKey(prefix, text) {
   let h = 0
   for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) | 0
   return prefix + Math.abs(h).toString(36)
 }
-const priBadge = p => p === 1 ? `<span class="pri p1">필수</span>` : p === 2 ? `<span class="pri p2">중요</span>` : ''
+const PRI_LABEL = { 1: '필수', 2: '중요', 3: '권장', 4: '선택' }
+const priBadge = p => PRI_LABEL[p] ? `<span class="pri p${p}">${PRI_LABEL[p]}</span>` : ''
 const byPri = (a, b) => (a.pri || 9) - (b.pri || 9)
 
 let onlyImportantTips = false, onlyImportantChecks = false
@@ -1354,6 +1357,7 @@ $('tipFilter').addEventListener('click', e => {
 })
 $('checkFilter').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return
+  if (b.id === 'soloToggle') { S.showSolo = !S.showSolo; save(); renderChecks(); return }
   onlyImportantChecks = b.dataset.v === 'true'; renderChecks()
 })
 
@@ -1397,6 +1401,8 @@ $('tipForm').addEventListener('submit', e => {
 /* ───────── 준비 탭 ───────── */
 function renderChecks() {
   renderPriFilter('checkFilter', onlyImportantChecks, '필수·중요만')
+  $('checkFilter').insertAdjacentHTML('beforeend',
+    `<button class="${S.showSolo ? 'on' : ''}" id="soloToggle">혼자 구간(13~15일)</button>`)
   let rows = [
     ...PRESET_CHECKS.map(raw => {
       const e = normEntry(raw)
@@ -1404,6 +1410,7 @@ function renderChecks() {
     }).filter(x => !S.removedChecks.includes(x.key)),
     ...S.customChecks.map(x => ({ t: x.text, pri: 0, key: x.id, custom: true })),
   ].sort(byPri)
+  if (!S.showSolo) rows = rows.filter(x => !x.solo)
   if (onlyImportantChecks) rows = rows.filter(x => x.pri === 1 || x.pri === 2)
   const done = rows.filter(x => S.checks[x.key]).length
   $('checkList').innerHTML = rows.length ? `
